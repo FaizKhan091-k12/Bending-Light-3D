@@ -2,9 +2,13 @@ using UnityEditor;
 using UnityEngine;
 using System.IO;
 
+
+
+
 public class PrefabBundleBuilder
 {
-    [MenuItem("Faiz/Android/Build Prefab Bundle")]
+
+    [MenuItem("Faiz/WebGL/Build Prefab Bundle")]
     static void BuildAll()
     {
         string path = "Assets/StreamingAssets";
@@ -30,7 +34,7 @@ public class PrefabBundleBuilder
         BuildPipeline.BuildAssetBundles(
             path,
             BuildAssetBundleOptions.None,
-            BuildTarget.WebGL
+            BuildTarget.StandaloneWindows
         );
 
         Debug.Log("✅ Prefab bundles built successfully and old files cleared!");
