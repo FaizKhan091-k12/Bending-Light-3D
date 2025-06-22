@@ -1,74 +1,80 @@
-
-
-
 using UnityEngine;
 using FirstPersonMobileTools.Utility;
 
 namespace FirstPersonMobileTools.DynamicFirstPerson
 {
+        
     [RequireComponent(typeof(AudioSource))]
     [RequireComponent(typeof(CharacterController))]
     [RequireComponent(typeof(CameraLook))]
-    public class MovementController : MonoBehaviour
-    {
-        #region Class accessible field
-        [HideInInspector] public bool Input_Sprint { get; set; }
-        [HideInInspector] public bool Input_Jump { get; set; }
-        [HideInInspector] public bool Input_Crouch { get; set; }
+    public class MovementController : MonoBehaviour {
+        
+    #region Class accessible field
+        [HideInInspector] public bool Input_Sprint { get; set; }    // Accessed through [Sprint button] in the scene
+        [HideInInspector] public bool Input_Jump   { get; set; }    // Accessed through [Jump button] in the scene
+        [HideInInspector] public bool Input_Crouch { get; set; }    // Accessed through [Crouch button] in the scene
 
-        [HideInInspector] public float Walk_Speed { private get { return m_WalkSpeed; } set { m_WalkSpeed = value; } }
-        [HideInInspector] public float Run_Speed { private get { return m_RunSpeed; } set { m_RunSpeed = value; } }
-        [HideInInspector] public float Crouch_Speed { private get { return m_CrouchSpeed; } set { m_CrouchSpeed = value; } }
-        [HideInInspector] public float Jump_Force { private get { return m_JumpForce; } set { m_JumpForce = value; } }
-        [HideInInspector] public float Acceleration { private get { return m_Acceleration; } set { m_Acceleration = value; } }
-        [HideInInspector] public float Land_Momentum { private get { return m_LandMomentum; } set { m_LandMomentum = value; } }
-        #endregion
+        [HideInInspector] public float Walk_Speed { private get { return m_WalkSpeed; } set { m_WalkSpeed = value; } }          // Accessed through [Walk speed] slider in the settings
+        [HideInInspector] public float Run_Speed { private get { return m_RunSpeed; } set { m_RunSpeed = value; } }             // Accessed through [Run speed] slider in the settings
+        [HideInInspector] public float Crouch_Speed { private get { return m_CrouchSpeed; } set { m_CrouchSpeed = value; } }    // Accessed through [Crouch speed] slider in the settings
+        [HideInInspector] public float Jump_Force { private get { return m_JumpForce; } set { m_JumpForce = value; } }          // Accessed through [Jump Force] slider in the settings
+        [HideInInspector] public float Acceleration { private get { return m_Acceleration; } set { m_Acceleration = value; } }  // Accessed through [Acceleration] slider in the settings
+        [HideInInspector] public float Land_Momentum { private get { return m_LandMomentum; } set { m_LandMomentum = value; } } // Accessed through [Landing Momentum] slider in the settings
+    #endregion
 
-        #region Editor accessible field
-        [SerializeField] private Joystick m_Joystick;
+    #region Editor accessible field
+        // Input Settings
+        [SerializeField] private Joystick m_Joystick;   // Available joystick mobile in the scene
 
-        [SerializeField] private float m_Acceleration = 1.0f;
-        [SerializeField] private float m_WalkSpeed = 1.0f;
-        [SerializeField] private float m_RunSpeed = 3.0f;
-        [SerializeField] private float m_CrouchSpeed = 0.5f;
-        [SerializeField] private float m_CrouchDelay = 0.5f;
-        [SerializeField] private float m_CrouchHeight = 1.0f;
+        // Ground Movement Settings
+        [SerializeField] private float m_Acceleration = 1.0f;   
+        [SerializeField] private float m_WalkSpeed = 1.0f;      
+        [SerializeField] private float m_RunSpeed = 3.0f;       
+        [SerializeField] private float m_CrouchSpeed = 0.5f;    
+        [SerializeField] private float m_CrouchDelay = 0.5f;    // Crouch transition time
+        [SerializeField] private float m_CrouchHeight = 1.0f;   // Crouch target height
+        
+        // Air Movement Settings
+        [SerializeField] private float m_JumpForce = 1.0f;      // y-axis force for jumping
+        [SerializeField] private float m_Gravity = 10.0f;       // Gravity force
+        [SerializeField] private float m_LandMomentum = 2.0f;   // Movement momentum strength after landed
 
-        [SerializeField] private float m_JumpForce = 1.0f;
-        [SerializeField] private float m_Gravity = 10.0f;
-        [SerializeField] private float m_LandMomentum = 2.0f;
+        // Audio Settings
+        [SerializeField] private AudioClip[] m_FootStepSounds;  // list of foot step sfx
+        [SerializeField] private AudioClip m_JumpSound;         // Jumping sfx
+        [SerializeField] private AudioClip m_LandSound;         // Landing sfx
 
-        [SerializeField] private AudioClip[] m_FootStepSounds;
-        [SerializeField] private AudioClip m_JumpSound;
-        [SerializeField] private AudioClip m_LandSound;
+        // Advanced Settings
+        [SerializeField] private Bobbing m_WalkBob = new Bobbing(); // Bobbing for walking
+        [SerializeField] private Bobbing m_IdleBob = new Bobbing(); // Bobbing for idling
+    #endregion
 
-        [SerializeField] private Bobbing m_WalkBob = new Bobbing();
-        [SerializeField] private Bobbing m_IdleBob = new Bobbing();
-        #endregion
-
+        // Main reference class
         private Camera m_Camera;
         private CharacterController m_CharacterController;
         private CameraLook m_CameraLook;
-        private AudioSource m_AudioSource;
+        private AudioSource m_AudioSource;      
 
-        private Vector3 m_MovementDirection;
-        public Vector3 m_HeadMovement;
-        private Vector3 m_LandBobRange_FinalImpact;
-        private Vector3 m_OriginalScale;
-        private const float m_StickToGround = -1f;
-        private float m_MinFallLand = -10f;
-        private float m_CrouchTimeElapse = 0.0f;
-        private float m_OriginalLandMomentum;
-        private bool m_IsFloating = false;
+        // Main global value
+        private Vector3 m_MovementDirection;                        // Vector3 value for CharacterController.Move()
+        public Vector3 m_HeadMovement;                             // Used for calculating all the head movement before applying to the camera position
+        private Vector3 m_LandBobRange_FinalImpact;                 // Dynamic bob range based on falling velocity
+        private Vector3 m_OriginalScale;                            // Original scale for crouching
+        private const float m_StickToGround = -1f;                  // force character controller into the ground
+        private float m_MinFallLand = -10f;                         // Minimum falling velocity to be considered as landed
+        private float m_CrouchTimeElapse = 0.0f;                    // Time beofre 
+        private float m_OriginalLandMomentum;                       // Slowdown momentum when landing
+        private bool m_IsFloating = false;                          // Player state if is in the air
 
-        private float m_MovementVelocity
-        {
+
+        private float m_MovementVelocity 
+        { 
             get { return new Vector2(m_CharacterController.velocity.x, m_CharacterController.velocity.z).magnitude; }
         }
 
         private Vector2 Input_Movement
         {
-            get { return m_Joystick != null ? new Vector2(m_Joystick.Horizontal, m_Joystick.Vertical) : Vector2.zero; }
+            get { if (m_Joystick != null) return new Vector2(m_Joystick.Horizontal, m_Joystick.Vertical); else return Vector2.zero; } 
         }
 
         private bool m_IsWalking
@@ -90,18 +96,27 @@ namespace FirstPersonMobileTools.DynamicFirstPerson
         {
             get
             {
-                bool hasMovementInput = Input_Movement.magnitude != 0 || External_Input_Movement.magnitude != 0;
-                return Input_Crouch ? m_CrouchSpeed : Input_Sprint ? m_RunSpeed : hasMovementInput ? m_WalkSpeed : 0.0f;
+                bool isMoving = Input_Movement.magnitude > 0.01f;
+
+#if UNITY_EDITOR || UNITY_STANDALONE
+                isMoving |= External_Input_Movement.magnitude > 0.01f;
+#endif
+
+                if (Input_Crouch) return m_CrouchSpeed;
+                if (Input_Sprint) return m_RunSpeed;
+                return isMoving ? m_WalkSpeed : 0.0f;
             }
         }
 
-#if UNITY_EDITOR
         public Vector2 External_Input_Movement;
-#else
-private Vector2 External_Input_Movement;
-#endif
-        private void Start()
+    #if UNITY_EDITOR
+       
+    #endif
+
+
+        private void Start() 
         {
+            
             m_Camera = GetComponentInChildren<Camera>();
             m_AudioSource = GetComponent<AudioSource>();
             m_CharacterController = GetComponent<CharacterController>();
@@ -113,18 +128,20 @@ private Vector2 External_Input_Movement;
 
             m_WalkBob.SetUp();
             m_IdleBob.SetUp();
+            
         }
 
-        private void Update()
-        {
+        private void Update() 
+        { 
+
             Handle_InputMovement();
-            Handle_AirMovement();
+            Handle_AirMovement();   
             Handle_Crouch();
             Handle_Step();
 
             UpdateWalkBob();
 
-            m_CharacterController.Move(m_MovementDirection * Time.deltaTime);
+            m_CharacterController.Move(m_MovementDirection * Time.deltaTime);   
 
             m_Camera.transform.localPosition += m_HeadMovement;
             m_HeadMovement = Vector3.zero;
@@ -132,18 +149,34 @@ private Vector2 External_Input_Movement;
 
         private void Handle_InputMovement()
         {
-            Vector2 Input;
-            Input.x = Input_Movement.x == 0 ? External_Input_Movement.x : Input_Movement.x;
-            Input.y = Input_Movement.y == 0 ? External_Input_Movement.y : Input_Movement.y;
 
-            Vector3 WalkTargetDirection =
-                Input.y * transform.forward * m_speed +
-                Input.x * transform.right * m_speed;
+            Vector2 moveInput = Vector2.zero;
 
-            WalkTargetDirection = Input_Sprint && WalkTargetDirection == Vector3.zero ? transform.forward * m_speed : WalkTargetDirection;
+// Prefer joystick if present
+            if (Input_Movement != Vector2.zero)
+            {
+                moveInput = Input_Movement;
+            }
+#if UNITY_EDITOR || UNITY_STANDALONE
+// Fallback to keyboard input (WASD/arrow keys)
+            else
+            {
+                float h = Input.GetAxis("Horizontal");
+                float v = Input.GetAxis("Vertical");
+                moveInput = new Vector2(h, v);
+            }
+#endif
 
-            m_MovementDirection.x = Mathf.MoveTowards(m_MovementDirection.x, WalkTargetDirection.x, m_Acceleration * Time.deltaTime);
-            m_MovementDirection.z = Mathf.MoveTowards(m_MovementDirection.z, WalkTargetDirection.z, m_Acceleration * Time.deltaTime);
+
+            Vector3 walkTargetDirection =
+                transform.forward * (moveInput.y * m_speed) +
+                transform.right * (moveInput.x * m_speed);
+
+
+            walkTargetDirection = Input_Sprint && walkTargetDirection == Vector3.zero? transform.forward * m_speed : walkTargetDirection;
+
+            m_MovementDirection.x = Mathf.MoveTowards(m_MovementDirection.x, walkTargetDirection.x, m_Acceleration * Time.deltaTime);
+            m_MovementDirection.z = Mathf.MoveTowards(m_MovementDirection.z, walkTargetDirection.z, m_Acceleration * Time.deltaTime);        
 
             if (m_LandMomentum != m_OriginalLandMomentum)
             {
@@ -155,91 +188,121 @@ private Vector2 External_Input_Movement;
 
         private void Handle_AirMovement()
         {
+            
             if (m_OnLanded)
             {
+
                 m_LandMomentum = 0;
                 PlaySound(m_LandSound);
+
             }
 
             if (m_CharacterController.isGrounded)
             {
-                if (m_IsFloating) m_IsFloating = false;
+                
+                if(m_IsFloating) m_IsFloating = false;
 
+                // force player to stick to ground or else CharacterController.IsGrounded will return true
                 m_MovementDirection.y = m_StickToGround;
 
-                if (Input_Jump)
+                if (Input_Jump) 
                 {
                     PlaySound(m_JumpSound);
                     m_MovementDirection.y = m_JumpForce;
+                    if (m_JumpSound != null) PlaySound(m_JumpSound);
                 }
-            }
-            else
-            {
-                if (!m_IsFloating) m_IsFloating = true;
 
+            } 
+            else 
+            {
+
+                if(!m_IsFloating) m_IsFloating = true;
+
+                // Prevent floating if jumping is blocked 
                 if (m_CharacterController.collisionFlags == CollisionFlags.Above)
                 {
                     m_MovementDirection.y = 0.0f;
                 }
 
-                m_MovementDirection.y -= m_Gravity * Time.deltaTime;
+                m_MovementDirection.y -= m_Gravity * Time.deltaTime;  
+
             }
+            
         }
 
         public void Handle_Crouch()
         {
-            if (Input_Crouch && transform.localScale.y != (m_CrouchHeight / m_CharacterController.height) * m_OriginalScale.y)
+            
+            //Crouching State
+            if (Input_Crouch && transform.localScale.y != (m_CrouchHeight / m_CharacterController.height) * m_OriginalScale.y) 
             {
+
                 CrouchTransition(m_CrouchHeight, Time.deltaTime);
+
             }
 
+            // Standing State
             if (!Input_Crouch && transform.localScale.y != m_OriginalScale.y)
             {
+                
                 CrouchTransition(m_CharacterController.height, -Time.deltaTime);
-            }
 
+            }
+            
             void CrouchTransition(float TargetHeight, float value)
             {
+                
+                // Origin is on top of head to avoid any collision with the player it self
                 Vector3 Origin = transform.position + (transform.localScale.y / m_OriginalScale.y) * m_CharacterController.height * Vector3.up;
-                if (Physics.Raycast(Origin, Vector3.up, m_CharacterController.height - Origin.y))
+                if (Physics.Raycast(Origin, Vector3.up, m_CharacterController.height - Origin.y)) 
                 {
                     Input_Crouch = true;
                     return;
                 }
 
                 m_CrouchTimeElapse += value;
+                
                 m_CrouchTimeElapse = Mathf.Clamp(m_CrouchTimeElapse, 0, m_CrouchDelay);
-
+                
                 transform.localScale = new Vector3(
-                    transform.localScale.x,
-                    Mathf.Lerp(m_OriginalScale.y, (m_CrouchHeight / m_CharacterController.height) * m_OriginalScale.y, m_CrouchTimeElapse / m_CrouchDelay),
-                    transform.localScale.z);
+                    transform.localScale.x, 
+                    Mathf.Lerp(m_OriginalScale.y, (m_CrouchHeight / m_CharacterController.height) * m_OriginalScale.y, m_CrouchTimeElapse / m_CrouchDelay), 
+                    transform.localScale.z); 
+
             }
+            
         }
 
         private void Handle_Step()
         {
+
             if (m_FootStepSounds.Length == 0) return;
-            if (m_WalkBob.OnStep) PlaySound(m_FootStepSounds[UnityEngine.Random.Range(0, m_FootStepSounds.Length)]);
+            if (m_WalkBob.OnStep) PlaySound(m_FootStepSounds[UnityEngine.Random.Range(0, m_FootStepSounds.Length - 1)]);
+
         }
 
         private void UpdateWalkBob()
         {
-            if ((m_IsWalking && !m_IsFloating) || !m_WalkBob.BackToOriginalPosition)
+
+            if ((m_IsWalking && !m_IsFloating) || !m_WalkBob.BackToOriginalPosition) 
             {
-                float speed = m_MovementVelocity == 0 ? m_WalkSpeed : m_MovementVelocity;
+                float speed = m_MovementVelocity == 0? m_WalkSpeed : m_MovementVelocity;
                 m_HeadMovement += m_WalkBob.UpdateBobValue(speed, m_WalkBob.BobRange);
-            }
+            } 
             else if (!m_IsWalking || !m_IdleBob.BackToOriginalPosition)
             {
                 m_HeadMovement += m_IdleBob.UpdateBobValue(1, m_IdleBob.BobRange);
             }
+            
         }
 
+        // Utility function
         private void PlaySound(AudioClip audioClip)
         {
             m_AudioSource.clip = audioClip;
             if (m_AudioSource.clip != null) m_AudioSource.PlayOneShot(m_AudioSource.clip);
         }
+
     }
+
 }

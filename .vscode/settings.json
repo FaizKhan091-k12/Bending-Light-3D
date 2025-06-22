@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "BendingLight 3D.sln"
+    "dotnet.defaultSolution": "Bending.sln"
 }
