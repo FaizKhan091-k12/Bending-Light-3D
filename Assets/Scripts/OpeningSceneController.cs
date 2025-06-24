@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using FirstPersonMobileTools.DynamicFirstPerson;
 using TMPro;
@@ -17,6 +18,7 @@ public class OpeningSceneController : MonoBehaviour
     [SerializeField] ProceduralImage imageToFadeIn;
     [SerializeField] private GameObject joyStickCanvas;
     [SerializeField] float fadeDuration = 2f;
+    [SerializeField] private GameObject settingsMenu;
 
     [Header("Audio References")]
     [SerializeField] private AudioSource schoolPublicAudio;
@@ -61,9 +63,14 @@ public class OpeningSceneController : MonoBehaviour
     }
 
 
+    private void Awake()
+    {
+        Application.targetFrameRate = 60;
+    }
+
     private void Start()
     {
-   //     Application.targetFrameRate = 60;
+
         if (playOpeningScene)
         {
         
@@ -73,6 +80,14 @@ public class OpeningSceneController : MonoBehaviour
         else
         {
             return;
+        }
+    }
+    
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            settingsMenu.SetActive(!settingsMenu.activeSelf);
         }
     }
 
