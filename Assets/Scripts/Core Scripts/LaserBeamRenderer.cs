@@ -31,8 +31,6 @@ public class LaserBeamRenderer : MonoBehaviour
     [Header("UI Refraction Settings")]
     [SerializeField] TextMeshProUGUI incidenceAngleText;
     [SerializeField] TextMeshProUGUI refractionAngleText;
-    //[SerializeField] TextMeshProUGUI leftSliderValue;
-    //[SerializeField] TextMeshProUGUI rightSliderValue;
     [SerializeField] Slider leftRefractiveSlider;
     [SerializeField] Slider rightRefractiveSlider;
     [SerializeField] ProceduralImage refractionAngleImage;
@@ -64,7 +62,7 @@ public class LaserBeamRenderer : MonoBehaviour
         {
             wavelength = laserColorSlider.value;
             laserColorValue.text = laserColorSlider.value + "nm";
-            laserColorImage.color = beamColor;
+          
 
         });
         leftDropDown.onValueChanged.AddListener(delegate
@@ -97,6 +95,25 @@ public class LaserBeamRenderer : MonoBehaviour
         beamColor = useWavelengthColor ? WavelengthToRGB(wavelength) : Color.red;
         if (laserMaterial && laserMaterial.color != beamColor)
             laserMaterial.color = beamColor;
+
+
+        laserColorImage.color = beamColor;
+
+        if (leftMaterial == rightMaterial || rightMaterial == leftMaterial)
+        {
+            refractionAngle = incidenceAngle;
+        }
+
+       
+        
+            incidenceAngleText.text = incidenceAngle.ToString("F1") + "<sup>o</sup>";
+            refractionAngleText.text = refractionAngle.ToString("F1") + "<sup>o</sup>";
+            incidenceAngleImage.fillAmount = (0.25f / 90f) * incidenceAngle;
+            refractionAngleImage.fillAmount = (0.25f / 90f) * refractionAngle;
+        
+     
+
+
     }
 
     void OnRenderObject()
@@ -114,7 +131,7 @@ public class LaserBeamRenderer : MonoBehaviour
         Vector3 lastPoint = origin;
 
         float currentIOR = GetIORFromMaterial(leftMaterial, wavelength);
-        if (leftIORText) leftIORText.text = $"{currentIOR:F4}";
+        if (leftIORText) leftIORText.text = $"{currentIOR:F2}";
         bool insideMaterial = false;
 
         for (int i = 0; i < maxRefractions && remainingLength > 0; i++)
@@ -128,13 +145,12 @@ public class LaserBeamRenderer : MonoBehaviour
                 lastPoint = hitPoint;
 
                 incidenceAngle = Vector3.Angle(-direction, normal);
-                incidenceAngleText.text = incidenceAngle.ToString("F1");
-                incidenceAngleImage.fillAmount = (0.25f / 90f) * incidenceAngle;
-
+            
+ 
 
                 string nextMaterial = insideMaterial ? leftMaterial : rightMaterial;
                 float nextIOR = GetIORFromMaterial(nextMaterial, wavelength);
-                if (rightIORText) rightIORText.text = $"{nextIOR:F4}";
+                if (rightIORText) rightIORText.text = $"{nextIOR:F2}";
              //   Debug.Log($"λ: {wavelength}nm | Left IOR: {currentIOR:F4} ({leftMaterial}) | Right IOR: {nextIOR:F4} ({nextMaterial})");
 
 
@@ -179,8 +195,8 @@ public class LaserBeamRenderer : MonoBehaviour
                 }
 
                 refractionAngle = Vector3.Angle(refractedDir, -normal);
-                refractionAngleText.text = refractionAngle.ToString("F1");
-                refractionAngleImage.fillAmount = (0.25f / 90f) * refractionAngle;
+            
+            
 
                 origin = hitPoint + refractedDir * 0.001f;
                 direction = refractedDir;

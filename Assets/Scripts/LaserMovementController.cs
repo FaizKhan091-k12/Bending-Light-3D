@@ -85,7 +85,7 @@ public class LaserMovementController : MonoBehaviour
 
     private void AngleSliderControlls()
     {
-        targetAngle = angleSlider.value; angleText.text = angleSlider.value.ToString("0.00") + "<sup> o</sup>";
+        targetAngle = angleSlider.value; angleText.text = angleSlider.value.ToString("F1") + "<sup> o</sup>";
       
     }
 
