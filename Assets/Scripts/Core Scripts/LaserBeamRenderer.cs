@@ -29,6 +29,13 @@ public class LaserBeamRenderer : MonoBehaviour
     public float refractionAngle;
     public float reflectionAngle;
 
+    [Header("Intensity Debug")]
+    public float reflectedSPercent;
+    public float reflectedPPercent;
+    public float transmittedSPercent;
+    public float transmittedPPercent;
+    public float transmittedAvgPercent;
+
     [Header("UI Refraction Settings")]
     [SerializeField] TextMeshProUGUI incidenceAngleText;
     [SerializeField] TextMeshProUGUI refractionAngleText;
@@ -47,6 +54,9 @@ public class LaserBeamRenderer : MonoBehaviour
     [SerializeField] ProceduralImage laserColorImage;
     [SerializeField] private GameObject[] leftSideMaterialsArray;
     [SerializeField] private GameObject[] rightSideMaterialsArray;
+    [SerializeField] TMP_Text incidenceAngleText3D;
+    [SerializeField] TMP_Text refractionAngleText3D;
+    [SerializeField] TMP_Text reflectionAngleText3D;
 
     private Material laserMaterial;
     private Color beamColor;
@@ -113,6 +123,9 @@ public class LaserBeamRenderer : MonoBehaviour
 
     void Update()
     {
+        refractionAngleText3D.transform.parent.localEulerAngles = new Vector3(90, 0, incidenceAngle - refractionAngle);
+        reflectionAngleText3D.transform.parent.localEulerAngles = new Vector3(90, 0, Mathf.Abs(incidenceAngle + reflectionAngle));
+
         beamColor = useWavelengthColor ? WavelengthToRGB(wavelength) : Color.red;
         if (laserMaterial.color != beamColor)
             laserMaterial.color = beamColor;
@@ -130,117 +143,121 @@ public class LaserBeamRenderer : MonoBehaviour
             reflectionAngleImage.fillAmount = (0.25f / 90f) * reflectionAngle;
 
         refractionAngleImage.gameObject.SetActive(didRefract || sameMaterial);
+        refractionAngleText3D.transform.parent.gameObject.SetActive(didRefract || sameMaterial);
+        reflectionAngleText3D.transform.parent?.gameObject.SetActive(didReflect);
         reflectionAngleImage?.gameObject.SetActive(didReflect);
         reflectionAngleText.gameObject.SetActive(didReflect);
     }
 
-  void OnRenderObject()
-{
-    didRefract = false;
-    didReflect = false;
-
-    if (!laserStart || !laserMaterial) return;
-
-    laserMaterial.SetPass(0);
-    GL.PushMatrix();
-    GL.Begin(GL.QUADS);
-    GL.Color(beamColor);
-
-    Vector3 origin = laserStart.position;
-    Vector3 direction = laserStart.TransformDirection(laserDirection.normalized);
-    float remainingLength = laserLength;
-    Vector3 lastPoint = origin;
-
-    float currentIOR = GetIORFromMaterial(leftMaterial, wavelength);
-    leftIORText.text = $"{currentIOR:F3}";
-    bool insideMaterial = false;
-
-    for (int i = 0; i < maxRefractions && remainingLength > 0; i++)
+    void OnRenderObject()
     {
-        if (Physics.Raycast(origin, direction, out RaycastHit hit, remainingLength, refractableLayer))
+        didRefract = false;
+        didReflect = false;
+
+        if (!laserStart || !laserMaterial) return;
+
+        laserMaterial.SetPass(0);
+        GL.PushMatrix();
+        GL.Begin(GL.QUADS);
+        GL.Color(beamColor);
+
+        Vector3 origin = laserStart.position;
+        Vector3 direction = laserStart.TransformDirection(laserDirection.normalized);
+        float remainingLength = laserLength;
+        Vector3 lastPoint = origin;
+
+        float currentIOR = GetIORFromMaterial(leftMaterial, wavelength);
+        leftIORText.text = $"{currentIOR:F3}";
+        bool insideMaterial = false;
+
+        for (int i = 0; i < maxRefractions && remainingLength > 0; i++)
         {
-            Vector3 hitPoint = hit.point;
-            Vector3 normal = hit.normal.normalized;
-            Vector3 incoming = direction.normalized;
-
-            DrawQuadBeam(lastPoint, hitPoint, beamWidth);
-            lastPoint = hitPoint;
-
-            incidenceAngle = Vector3.Angle(normal, -incoming);
-            string nextMaterial = insideMaterial ? leftMaterial : rightMaterial;
-            float nextIOR = GetIORFromMaterial(nextMaterial, wavelength);
-            rightIORText.text = $"{nextIOR:F3}";
-
-            Vector3 reflectDir = Vector3.Reflect(incoming, normal);
-            reflectionAngle = Vector3.Angle(reflectDir, normal);
-
-            float thetaI_rad = incidenceAngle * Mathf.Deg2Rad;
-            float sinThetaT = (currentIOR / nextIOR) * Mathf.Sin(thetaI_rad);
-            Vector3 refractedDir = Vector3.zero;
-
-            if (sinThetaT >= 1f)
+            if (Physics.Raycast(origin, direction, out RaycastHit hit, remainingLength, refractableLayer))
             {
-                didReflect = true;
-                DrawQuadBeam(hitPoint, hitPoint + reflectDir * 0.5f, beamWidth * 0.5f);
-                Debug.Log("Total Internal Reflection");
-            }
-            else
-            {
-                float cosThetaI = Mathf.Cos(thetaI_rad);
-                float cosThetaT = Mathf.Sqrt(1f - sinThetaT * sinThetaT);
+                Vector3 hitPoint = hit.point;
+                Vector3 normal = hit.normal.normalized;
+                Vector3 incoming = direction.normalized;
 
-                float rs = (currentIOR * cosThetaI - nextIOR * cosThetaT) / (currentIOR * cosThetaI + nextIOR * cosThetaT);
-                float rp = (currentIOR * cosThetaT - nextIOR * cosThetaI) / (currentIOR * cosThetaT + nextIOR * cosThetaI);
+                DrawQuadBeam(lastPoint, hitPoint, beamWidth);
+                lastPoint = hitPoint;
 
-                float reflectanceS = rs * rs;
-                float reflectanceP = rp * rp;
-                float reflectanceAvg = 0.5f * (reflectanceS + reflectanceP);
+                incidenceAngle = Vector3.Angle(normal, -incoming);
+                string nextMaterial = insideMaterial ? leftMaterial : rightMaterial;
+                float nextIOR = GetIORFromMaterial(nextMaterial, wavelength);
+                rightIORText.text = $"{nextIOR:F3}";
 
-                Debug.Log($"Rs: {reflectanceS * 100f:F2}% | Rp: {reflectanceP * 100f:F2}% | Avg: {reflectanceAvg * 100f:F2}%");
+                Vector3 reflectDir = Vector3.Reflect(incoming, normal);
+                reflectionAngle = Vector3.Angle(reflectDir, normal);
 
-                if (reflectanceS > 0.005f)
+                float thetaI_rad = incidenceAngle * Mathf.Deg2Rad;
+                float sinThetaT = (currentIOR / nextIOR) * Mathf.Sin(thetaI_rad);
+                Vector3 refractedDir = Vector3.zero;
+
+                if (sinThetaT >= 1f)
                 {
                     didReflect = true;
-                    DrawQuadBeam(hitPoint, hitPoint + reflectDir * 0.5f, reflectiveBeamWidht * reflectanceS);
+                    DrawQuadBeam(hitPoint, hitPoint + reflectDir * 0.5f, beamWidth * 0.5f);
+                    Debug.Log("Total Internal Reflection");
                 }
                 else
                 {
-                    
+                    float cosThetaI = Mathf.Cos(thetaI_rad);
+                    float cosThetaT = Mathf.Sqrt(1f - sinThetaT * sinThetaT);
+
+                    float rs = (currentIOR * cosThetaI - nextIOR * cosThetaT) / (currentIOR * cosThetaI + nextIOR * cosThetaT);
+                    float rp = (currentIOR * cosThetaT - nextIOR * cosThetaI) / (currentIOR * cosThetaT + nextIOR * cosThetaI);
+
+                    reflectedSPercent = rs * rs * 100f;
+                    reflectedPPercent = rp * rp * 100f;
+                    transmittedSPercent = 100f - reflectedSPercent;
+                    transmittedPPercent = 100f - reflectedPPercent;
+                    transmittedAvgPercent = 0.5f * (transmittedSPercent + transmittedPPercent);
+
+                    Debug.Log($"Rs: {reflectedSPercent:F2}% | Rp: {reflectedPPercent:F2}% | " +
+                              $"Ts: {transmittedSPercent:F2}% | Tp: {transmittedPPercent:F2}% | AvgT: {transmittedAvgPercent:F2}%");
+
+                    if (reflectedSPercent > 0.5f)
+                    {
+                        didReflect = true;
+                        DrawQuadBeam(hitPoint, hitPoint + reflectDir * 0.5f, reflectiveBeamWidht * reflectedSPercent / 100f);
+                    }
+                    else
+                    {
                         Debug.Log("Reflectance too low, skipping reflective ray.");
+                    }
+
+                    refractedDir = RefractRay(incoming, normal, currentIOR, nextIOR);
+                    refractionAngle = Vector3.Angle(-normal, refractedDir);
+                    // didRefract = true;
+
+                    if (transmittedSPercent > 0.5f && refractedDir != Vector3.zero)
+                    {
+                        didRefract = true;
+                        DrawQuadBeam(hitPoint, hitPoint + refractedDir * 10f, reflectiveBeamWidht * transmittedSPercent / 100f);
+                    }
+
                 }
 
-                refractedDir = RefractRay(incoming, normal, currentIOR, nextIOR);
-                refractionAngle = Vector3.Angle(-normal, refractedDir);
-                didRefract = true;
-            }
+                origin = (refractedDir == Vector3.zero) ? hitPoint + reflectDir * 0.001f : hitPoint + refractedDir * 0.001f;
+                direction = (refractedDir == Vector3.zero) ? reflectDir : refractedDir;
 
-            if (refractedDir == Vector3.zero)
-            {
-                origin = hitPoint + reflectDir * 0.001f;
-                direction = reflectDir;
+                remainingLength -= Vector3.Distance(hitPoint, origin);
+                insideMaterial = !insideMaterial;
+                currentIOR = nextIOR;
             }
             else
             {
-                origin = hitPoint + refractedDir * 0.001f;
-                direction = refractedDir;
+                Vector3 endPoint = origin + direction * remainingLength;
+                // DrawQuadBeam(lastPoint, endPoint, beamWidth);
+                
+
+                break;
             }
+        }
 
-            remainingLength -= Vector3.Distance(hitPoint, origin);
-            insideMaterial = !insideMaterial;
-            currentIOR = nextIOR;
-        }
-        else
-        {
-            Vector3 endPoint = origin + direction * remainingLength;
-            DrawQuadBeam(lastPoint, endPoint, beamWidth);
-            break;
-        }
+        GL.End();
+        GL.PopMatrix();
     }
-
-    GL.End();
-    GL.PopMatrix();
-}
-
 
     float GetIORFromMaterial(string material, float wavelengthNm)
     {
