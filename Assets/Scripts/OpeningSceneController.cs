@@ -11,12 +11,14 @@ public class OpeningSceneController : MonoBehaviour
     
     [Header("Debug Options")]
     [SerializeField] private bool playOpeningScene = true;
+
+    [SerializeField] public float subtitleSpeed;
     
     [Space(10)]
     [Header("UI References")] 
     [SerializeField] Toggle crouchToggle;
     [SerializeField] ProceduralImage imageToFadeIn;
-    [SerializeField] private GameObject joyStickCanvas;
+    [SerializeField] public GameObject joyStickCanvas;
     [SerializeField] float fadeDuration = 2f;
     [SerializeField] private GameObject settingsMenu;
 
@@ -27,6 +29,7 @@ public class OpeningSceneController : MonoBehaviour
     [Header("Player References")]
     [SerializeField] private CameraLook cameraLook;
     [SerializeField] private nonMobileInput nonMobileInput;
+    [SerializeField] MovementController movementController;
     [SerializeField] private ObjectiveTypewriter objectiveTypewriter;
     
     [Header("Dialogue References")]
@@ -35,9 +38,15 @@ public class OpeningSceneController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI subtitleText;
     [SerializeField] private GameObject subtitlePanel;
 
+    
 
-   
 
+    public void TurnOFFPlayerControls()
+    {
+        cameraLook.enabled = false;
+        nonMobileInput.enabled = false;
+        movementController.Acceleration = 0;
+    }
     
     [System.Serializable]
     public class DialogueLine
@@ -52,6 +61,7 @@ public class OpeningSceneController : MonoBehaviour
         Opening,
         GlassPickup,
         LaserPickup,
+        StartExperiment,
         
        
     }
@@ -65,7 +75,7 @@ public class OpeningSceneController : MonoBehaviour
 
     private void Awake()
     {
-        Application.targetFrameRate = 60;
+       // Application.targetFrameRate = 60;
     }
 
     private void Start()
@@ -98,6 +108,7 @@ public class OpeningSceneController : MonoBehaviour
         crouchToggle.isOn = true;
         cameraLook.enabled = false;
         nonMobileInput.enabled = false;
+        movementController.Acceleration = 0f;
 
       
         if (openingBackgroundAudio) openingBackgroundAudio.Play();
@@ -134,7 +145,7 @@ public class OpeningSceneController : MonoBehaviour
                 voiceSource.Play();
             }
 
-            yield return StartCoroutine(TypeSubtitle(line.subtitleText, 0.04f));
+            yield return StartCoroutine(TypeSubtitle(line.subtitleText, subtitleSpeed));
             yield return new WaitForSeconds(line.displayDuration);
         }
 
@@ -199,7 +210,7 @@ public class OpeningSceneController : MonoBehaviour
         float tempCameraFOV = 20f;
         
         Camera cam = Camera.main;
-
+    
         float t = 0f;
         while (t < 1)
         {
@@ -209,17 +220,19 @@ public class OpeningSceneController : MonoBehaviour
             
         }
      
-        
+        cameraLook.enabled = true;
+        nonMobileInput.enabled = true;
+        joyStickCanvas.SetActive(true);
+        movementController.Acceleration = 10f;
+        crouchToggle.isOn = false;
         
     }
 
     public void OpeningSceneFinised()
     {
-        cameraLook.enabled = true;
-        nonMobileInput.enabled = true;
-        joyStickCanvas.SetActive(true);
-        crouchToggle.isOn = false;
+  
         StartCoroutine(CameraZoomEffectReset());
+       
 
     }
     

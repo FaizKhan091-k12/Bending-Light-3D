@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -5,6 +7,7 @@ using UnityEngine.UI.ProceduralImage;
 
 public class LaserMovementController : MonoBehaviour
 {
+    public bool isLaserON = false;
     public bool isDragging = false;
     public float rotationSpeed = 2.0f; // Sensitivity of rotation
     public float startAngle;
@@ -83,17 +86,28 @@ public class LaserMovementController : MonoBehaviour
         targetAngle = currentAngle;
     }
 
+   
     private void AngleSliderControlls()
     {
         targetAngle = angleSlider.value; angleText.text = angleSlider.value.ToString("F1") + "<sup> o</sup>";
       
     }
 
+    void LaserActivator()
+    {
+        if (!isLaserON)
+        {
+            
+        }
+    }
+    
+  
     void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
             TryStartDrag();
+           
         }
 
         if (Input.GetMouseButtonUp(0))

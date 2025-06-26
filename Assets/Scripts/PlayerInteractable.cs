@@ -2,21 +2,26 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using TMPro;
+using UnityEngine.UI.ProceduralImage;
 
 public class PlayerInteractable : MonoBehaviour
 {
     [Header("Debug Options")] [SerializeField]
     private bool lockMouseState;
+
+    public  bool bothObjectiveCompleted = false;
     
     [Space(10)]
     public OpeningSceneController openingSceneController;
+    public InitiateExperiment initiateExperiment;
 
     [Header("RayCast Refrences")] 
     [SerializeField] Camera cam;
     [SerializeField] float rayMaxDistance;
     
     [Header("Pickup Refrences")]
-    [SerializeField] Button pickupButton;
+    [SerializeField] Button handIconPickupButton;
     [SerializeField] Transform pickupLocations;
     [SerializeField] Transform GlassDropLocation;
     [SerializeField] Transform laserDropLocation;
@@ -35,33 +40,68 @@ public class PlayerInteractable : MonoBehaviour
     [SerializeField] GameObject objectiveComplete3;
 
     [SerializeField] private GameObject InstructionPanel;
+
+    [Header("Start Experiment Refrences")] 
+    [SerializeField] ProceduralImage imageToFadeIn;
+    [SerializeField] float fadeDuration;
+    [SerializeField] GameObject experimentCam;
+    [SerializeField] GameObject playerCam;
+    
     
     Interactable currentInteractable;
     float t = 0f;
     bool glassHasPickedUp = false;
     bool laserHasPickedUp = false;
+    public bool startExperimentKeyIndicator = false;
     
 
    private void Start()
    {
    
        InstructionPanel.SetActive(false);
-       pickupButton.gameObject.SetActive(false);
+       handIconPickupButton.gameObject.SetActive(false);
     
    }
 
    private void Update()
    {
        MouseStateController();
-       if (!itemInHand)
+       if (!startExperimentKeyIndicator)
        {
-           RayCastItems();
+           if (!itemInHand && !bothObjectiveCompleted)
+           {
+               RayCastItems();
+           }
+           else
+           {
+
+               if (bothObjectiveCompleted) return;
+               CalculateDistancebtwTableNPlayer();
+               InstructionPanel.SetActive(false);
+
+           }
+           
+          
        }
        else
        {
-           CalculateDistancebtwTableNPlayer();
-           InstructionPanel.SetActive(false);
+           InstructionPanel.SetActive(true);
        }
+
+       if (startExperimentKeyIndicator)
+       {
+           if (Input.GetKeyDown(pickupKey))
+           {
+               Debug.Log("Star");
+               handIconPickupButton.interactable = false;
+               StartExperiment();
+               startExperimentKeyIndicator = false;
+           }
+
+       }
+     
+
+
 
    }
 
@@ -70,12 +110,12 @@ public class PlayerInteractable : MonoBehaviour
        float distance = Vector3.Distance(player.position, experimentTable.position);
        if (distance < itemDropDistance)
        {
-           pickupButton.gameObject.SetActive(true);
+           handIconPickupButton.gameObject.SetActive(true);
            Interact(currentInteractable);
        }
        else
        {
-           pickupButton.gameObject.SetActive(false);
+           handIconPickupButton.gameObject.SetActive(false);
 
        }
    }
@@ -96,7 +136,7 @@ public class PlayerInteractable : MonoBehaviour
        }
    }
 
-   private void RayCastItems()
+    private void RayCastItems()
     {
         Ray ray = cam.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
 
@@ -112,7 +152,7 @@ public class PlayerInteractable : MonoBehaviour
             
             if (interactable != null)
             {
-                pickupButton.gameObject.SetActive(true);
+                handIconPickupButton.gameObject.SetActive(true);
                 currentInteractable = interactable;
                  Interact(interactable);
                  if (!itemInHand)
@@ -126,36 +166,54 @@ public class PlayerInteractable : MonoBehaviour
             else
             {
                 
-                pickupButton.gameObject.SetActive(false);  
+                //handIconPickupButton.gameObject.SetActive(false);  
                 InstructionPanel.SetActive(false);
+               // Debug.Log("First");
             }
         }
         else
         {
-            pickupButton.gameObject.SetActive(false);
-            InstructionPanel.SetActive(false);
-
+            handIconPickupButton.gameObject.SetActive(false);
+         //   InstructionPanel.SetActive(false);
+          //  Debug.Log("Second");
         }
 
     }
 
     public void Interact(Interactable interactable)
     {
-        pickupButton.onClick.RemoveAllListeners();
-        pickupButton.onClick.AddListener(delegate
+        handIconPickupButton.onClick.RemoveAllListeners();
+        handIconPickupButton.onClick.AddListener(delegate
         {
-            if (interactable != null)
+            if (!startExperimentKeyIndicator)
             {
-                ObjectPickAndDrop(interactable);
+                if (interactable != null)
+                {
+                    ObjectPickAndDrop(interactable);
+                }
             }
+            else
+            {
+                handIconPickupButton.interactable = false;
+                StartExperiment();
+            }
+           
         });
 
         if (Input.GetKeyDown(pickupKey))
         {
-            if (interactable != null)
+            if (!startExperimentKeyIndicator)
             {
-                ObjectPickAndDrop(interactable);
+                if (interactable != null)
+                {
+                    ObjectPickAndDrop(interactable);
+                }
             }
+         
+
+
+
+
         }
 
     }
@@ -167,7 +225,7 @@ public class PlayerInteractable : MonoBehaviour
  
         if (!itemInHand)
         {
-            pickupButton.gameObject.SetActive(false);
+            handIconPickupButton.gameObject.SetActive(false);
             itemInHand = true;
           
             if (interactable.isGlass)
@@ -208,7 +266,7 @@ public class PlayerInteractable : MonoBehaviour
         }
         else
         {
-            pickupButton.gameObject.SetActive(false);
+            handIconPickupButton.gameObject.SetActive(false);
             itemInHand = false;
 
             if (interactable.isGlass)
@@ -216,6 +274,10 @@ public class PlayerInteractable : MonoBehaviour
                 if (objectiveComplete1.activeInHierarchy && objectiveComplete2.activeInHierarchy)
                 {
                     objectiveComplete3.SetActive(true);
+                    bothObjectiveCompleted = true;
+                    FindFirstObjectByType<OpeningSceneController>()
+                        .PlayDialogue(OpeningSceneController.DialogueType.StartExperiment);
+                    Invoke(nameof(StartExperimentInstruction), 3f);
                 }
                 interactable.gameObject.transform.SetParent(GlassDropLocation);
                 // interactable.gameObject.transform.localPosition = Vector3.zero;
@@ -229,6 +291,11 @@ public class PlayerInteractable : MonoBehaviour
                 if (objectiveComplete1.activeInHierarchy && objectiveComplete2.activeInHierarchy)
                 {
                     objectiveComplete3.SetActive(true);
+                    bothObjectiveCompleted = true;
+                    FindFirstObjectByType<OpeningSceneController>()
+                        .PlayDialogue(OpeningSceneController.DialogueType.StartExperiment);
+                 Invoke(nameof(StartExperimentInstruction), 3f);
+                 
                 }
                 interactable.gameObject.transform.SetParent(laserDropLocation);
                 // interactable.gameObject.transform.localPosition = Vector3.zero;
@@ -257,9 +324,74 @@ public class PlayerInteractable : MonoBehaviour
         }
         
     }
-  
 
-    
+    public void StartExperimentInstruction()
+    {
+        startExperimentKeyIndicator = true;
+        InstructionPanel.SetActive(true);
+        InstructionPanel.transform.GetChild(0).transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "Press E or tap on hand icon to start the Experiment";
+        handIconPickupButton.gameObject.SetActive(true);
+        bothObjectiveCompleted = false;
+    }
 
-    
+    public void StartExperiment()
+    {
+        StartCoroutine(StartExperimentCoRoutine());
+    }
+    IEnumerator  StartExperimentCoRoutine()
+    {
+        imageToFadeIn.gameObject.SetActive(true);
+        Color color = imageToFadeIn.color;
+        float t = 0f;
+
+       
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            float alpha = Mathf.Lerp(.25f, 1f, t / fadeDuration);
+            imageToFadeIn.color = new Color(color.r, color.g, color.b, alpha);
+            experimentCam.SetActive(true);
+            openingSceneController.TurnOFFPlayerControls();
+            playerCam.transform.SetParent(experimentCam.transform);
+            playerCam.transform.localPosition =
+                Vector3.Lerp(playerCam.transform.localPosition, Vector3.zero, t / fadeDuration);
+            playerCam.transform.localRotation = Quaternion.Lerp(playerCam.transform.localRotation, Quaternion.identity, (t / fadeDuration)*.1f);
+            yield return null;
+        }
+        
+        handIconPickupButton.gameObject.SetActive(false);
+        openingSceneController.joyStickCanvas.transform.GetChild(0).gameObject.SetActive(false);
+        playerCam.SetActive(false);
+
+       Invoke(nameof(ExperimentWindowStart),1f);
+
+    }
+
+    public void ExperimentWindowStart()
+    {
+        initiateExperiment.InitizeExperiment();
+        StartCoroutine(ExperimentWindow());
+        
+    }
+    IEnumerator ExperimentWindow()
+    {
+        imageToFadeIn.gameObject.SetActive(true);
+        Color color = imageToFadeIn.color;
+        float t = 0f;
+
+
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            float alpha = Mathf.Lerp(1f, 0f, t / fadeDuration);
+            imageToFadeIn.color = new Color(color.r, color.g, color.b, alpha);
+            yield return null;
+        }
+
+    }
+
+
+
+
+
 }
