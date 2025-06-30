@@ -38,7 +38,8 @@ public class OpeningSceneController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI subtitleText;
     [SerializeField] private GameObject subtitlePanel;
 
-    
+    [SerializeField] string playerName = "Player: "; 
+
 
 
     public void TurnOFFPlayerControls()
@@ -55,7 +56,7 @@ public class OpeningSceneController : MonoBehaviour
         [TextArea] public string subtitleText;
         public float displayDuration = 3f;
     }
-    
+
     public enum DialogueType
     {
         Opening,
@@ -63,6 +64,8 @@ public class OpeningSceneController : MonoBehaviour
         LaserPickup,
         StartExperiment,
         LaserOn,
+        
+        ImaginationBegin,
         
        
     }
@@ -175,7 +178,7 @@ public class OpeningSceneController : MonoBehaviour
   
     IEnumerator TypeSubtitle(string fullText, float typingSpeed)
     {
-        subtitleText.text = "Player: ";
+        subtitleText.text = playerName;
         foreach (char c in fullText)
         {
             subtitleText.text += c;

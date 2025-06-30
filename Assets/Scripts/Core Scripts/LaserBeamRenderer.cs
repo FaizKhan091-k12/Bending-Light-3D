@@ -58,6 +58,8 @@ public class LaserBeamRenderer : MonoBehaviour
     [SerializeField] TMP_Text refractionAngleText3D;
     [SerializeField] TMP_Text reflectionAngleText3D;
 
+    [SerializeField] TextMeshProUGUI refelectiveIntensity;
+    [SerializeField] TextMeshProUGUI transmittedIntensity;
     private Material laserMaterial;
     private Color beamColor;
     public bool didRefract = false;
@@ -215,6 +217,9 @@ public class LaserBeamRenderer : MonoBehaviour
 
                     Debug.Log($"Rs: {reflectedSPercent:F2}% | Rp: {reflectedPPercent:F2}% | " +
                               $"Ts: {transmittedSPercent:F2}% | Tp: {transmittedPPercent:F2}% | AvgT: {transmittedAvgPercent:F2}%");
+
+                    refelectiveIntensity.text = reflectedSPercent.ToString("F2") + "%";
+                    transmittedIntensity.text = transmittedSPercent.ToString("F2") + "%";                    
 
                     if (reflectedSPercent > 0.5f)
                     {

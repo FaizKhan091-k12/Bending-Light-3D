@@ -13,6 +13,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _ALPHATEST_ON
+  - _RECEIVE_SHADOWS_OFF
   - _SURFACE_TYPE_TRANSPARENT
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -24,6 +25,7 @@ Material:
   disabledShaderPasses:
   - MOTIONVECTORS
   - DepthOnly
+  - SHADOWCASTER
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -62,7 +64,7 @@ Material:
     - Vector1_55003dfa023448c3bffa42f3ca4a99a4: -0.08
     - Vector1_6269b1025b26473ca8bc61634f34b537: 1
     - Vector1_687f54e8c371429f86b9eaab0e7dfe3e: 0.362
-    - Vector1_6c82dffdd68049bcb019d3a9c64c92a0: 0
+    - Vector1_6c82dffdd68049bcb019d3a9c64c92a0: 1.09
     - Vector1_6f56a0970372485390c6587863c2374e: -4
     - Vector1_7273530c27a34c9f8ee5723b84f96baa: 0
     - Vector1_dada42ebfac44076897b6de67441ba32: 0.06
@@ -71,12 +73,13 @@ Material:
     - _Ao: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 0
-    - _CastShadows: 1
+    - _CastShadows: 0
     - _Cull: 0
     - _DstBlend: 10
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _ReceiveShadows: 1
+    - _ReceiveShadows: 0
+    - _Speed: 1
     - _SrcBlend: 5
     - _Surface: 1
     - _WorkflowMode: 1
