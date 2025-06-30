@@ -9,14 +9,14 @@ public class LaserMovementController : MonoBehaviour
 {
     public bool isLaserON = false;
     public bool isDragging = false;
-    public float rotationSpeed = 2.0f; // Sensitivity of rotation
+    public float rotationSpeed = 2.0f; 
     public float startAngle;
     public Vector3 dragStartPos;
 
     public float targetAngle = 45f;
     public float currentAngle = 45f;
 
-    [SerializeField] private float smoothSpeed = 8f; // Controls lerp smoothness
+    [SerializeField] private float smoothSpeed = 8f; 
 
     [SerializeField] Slider angleSlider;
     [SerializeField] TextMeshProUGUI angleText;

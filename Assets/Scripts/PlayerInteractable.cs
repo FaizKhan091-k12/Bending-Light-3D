@@ -388,6 +388,8 @@ public class PlayerInteractable : MonoBehaviour
             yield return null;
         }
 
+        FindFirstObjectByType<OpeningSceneController>()
+            .PlayDialogue(OpeningSceneController.DialogueType.LaserOn);
     }
 
 

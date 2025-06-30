@@ -3499,7 +3499,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   laserStart: {fileID: 115665088}
   laserDirection: {x: 0, y: 0, z: 1}
-  laserLength: 0.32
+  laserLength: 0
   beamWidth: -0.0025
   reflectiveBeamWidht: -0.004
   wavelength: 700
@@ -8009,7 +8009,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &852491270
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9442,7 +9442,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &988840895
 RectTransform:
   m_ObjectHideFlags: 0
@@ -13979,6 +13979,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7457732567550476397, guid: a6afa647fbf4b3c43bce79947480ed85, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.09
+      objectReference: {fileID: 0}
     - target: {fileID: -6129644308706459113, guid: a6afa647fbf4b3c43bce79947480ed85, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -13986,6 +13990,10 @@ PrefabInstance:
     - target: {fileID: -4274249622546024361, guid: a6afa647fbf4b3c43bce79947480ed85, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -4026994319946304893, guid: a6afa647fbf4b3c43bce79947480ed85, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -4026994319946304893, guid: a6afa647fbf4b3c43bce79947480ed85, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -17390,7 +17398,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1943099019
 RectTransform:
   m_ObjectHideFlags: 0
@@ -38065,6 +38073,11 @@ MonoBehaviour:
     - voiceClip: {fileID: 0}
       subtitleText: Ok..now i have all the revelent equinment let's start the expeiment.
       displayDuration: 1.5
+  - type: 4
+    lines:
+    - voiceClip: {fileID: 0}
+      subtitleText: Let's click on the laser to start the exeriment.
+      displayDuration: 1
   voiceSource: {fileID: 0}
   subtitleText: {fileID: 6276208304238788256}
   subtitlePanel: {fileID: 1406211387105573862}

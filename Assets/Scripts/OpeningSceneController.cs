@@ -62,6 +62,7 @@ public class OpeningSceneController : MonoBehaviour
         GlassPickup,
         LaserPickup,
         StartExperiment,
+        LaserOn,
         
        
     }
