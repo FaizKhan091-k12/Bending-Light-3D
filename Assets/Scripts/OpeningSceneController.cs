@@ -8,14 +8,14 @@ using UnityEngine.UI;
 
 public class OpeningSceneController : MonoBehaviour
 {
-    
+
     [Header("Debug Options")]
     [SerializeField] private bool playOpeningScene = true;
 
     [SerializeField] public float subtitleSpeed;
-    
+
     [Space(10)]
-    [Header("UI References")] 
+    [Header("UI References")]
     [SerializeField] Toggle crouchToggle;
     [SerializeField] ProceduralImage imageToFadeIn;
     [SerializeField] public GameObject joyStickCanvas;
@@ -30,15 +30,17 @@ public class OpeningSceneController : MonoBehaviour
     [SerializeField] private CameraLook cameraLook;
     [SerializeField] private nonMobileInput nonMobileInput;
     [SerializeField] MovementController movementController;
+    [SerializeField] DragLookHandler dragLookHandler;
     [SerializeField] private ObjectiveTypewriter objectiveTypewriter;
-    
+
     [Header("Dialogue References")]
-    [SerializeField] private DialogueData[] dialogueDatabase; 
+    [SerializeField] private DialogueData[] dialogueDatabase;
     [SerializeField] private AudioSource voiceSource;
     [SerializeField] private TextMeshProUGUI subtitleText;
     [SerializeField] private GameObject subtitlePanel;
 
-    [SerializeField] string playerName = "Player: "; 
+    [SerializeField] string playerName = "Player: ";
+    [SerializeField] TextMeshProUGUI waitDialogues;
 
 
 
@@ -48,7 +50,7 @@ public class OpeningSceneController : MonoBehaviour
         nonMobileInput.enabled = false;
         movementController.Acceleration = 0;
     }
-    
+
     [System.Serializable]
     public class DialogueLine
     {
@@ -64,10 +66,10 @@ public class OpeningSceneController : MonoBehaviour
         LaserPickup,
         StartExperiment,
         LaserOn,
-        
+
         ImaginationBegin,
-        
-       
+
+
     }
     [System.Serializable]
     public class DialogueData
@@ -79,7 +81,16 @@ public class OpeningSceneController : MonoBehaviour
 
     private void Awake()
     {
-       // Application.targetFrameRate = 60;
+
+#if UNITY_ANDROID || UNITY_EDITOR
+        dragLookHandler.enabled = true;
+        cameraLook.enabled = false;
+
+#elif UNITY_WEBGL || UNITY_STANDALONE
+       dragLookHandler.enabled = true;
+        cameraLook.enabled = true;
+#endif 
+
     }
 
     private void Start()
@@ -87,16 +98,16 @@ public class OpeningSceneController : MonoBehaviour
 
         if (playOpeningScene)
         {
-        
+
             StartCoroutine(InitiateOpeningScene());
-            
+
         }
         else
         {
             return;
         }
     }
-    
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -107,18 +118,22 @@ public class OpeningSceneController : MonoBehaviour
 
     IEnumerator InitiateOpeningScene()
     {
+        waitDialogues.gameObject.SetActive(true);
         imageToFadeIn.color = Color.black;
         joyStickCanvas.SetActive(false);
         crouchToggle.isOn = true;
-        cameraLook.enabled = false;
+        cameraLook.Sensitivity_X = 0f;
+        cameraLook.Sensitivity_Y = 0f;
         nonMobileInput.enabled = false;
         movementController.Acceleration = 0f;
+        dragLookHandler.sensitivityX = 0f;
+        dragLookHandler.sensitivityY = 0f;
 
-      
+
         if (openingBackgroundAudio) openingBackgroundAudio.Play();
         if (schoolPublicAudio) schoolPublicAudio.Play();
 
-      
+
         Color color = imageToFadeIn.color;
         float t = 0f;
 
@@ -175,7 +190,7 @@ public class OpeningSceneController : MonoBehaviour
         }
     }
 
-  
+
     IEnumerator TypeSubtitle(string fullText, float typingSpeed)
     {
         subtitleText.text = playerName;
@@ -187,62 +202,66 @@ public class OpeningSceneController : MonoBehaviour
     }
 
 
-    IEnumerator  CameraZoomEffect()
+    IEnumerator CameraZoomEffect()
     {
         float defaultCameraFOV = 60f;
         float tempCameraFOV = 20f;
-        
+
         Camera cam = Camera.main;
 
         float t = 0f;
         while (t < 1)
         {
-            t+= Time.deltaTime;
+            t += Time.deltaTime;
             cam.fieldOfView = Mathf.Lerp(defaultCameraFOV, tempCameraFOV, t);
             yield return null;
-            
+
         }
-     
+
         objectiveTypewriter.StartTyping();
-        
-        
+
+
     }
-    
-    IEnumerator  CameraZoomEffectReset()
+
+    IEnumerator CameraZoomEffectReset()
     {
         float defaultCameraFOV = 60f;
         float tempCameraFOV = 20f;
-        
+
         Camera cam = Camera.main;
-    
+
         float t = 0f;
         while (t < 1)
         {
-            t+= Time.deltaTime;
+            t += Time.deltaTime;
             cam.fieldOfView = Mathf.Lerp(tempCameraFOV, defaultCameraFOV, t);
             yield return null;
-            
+
         }
-     
-        cameraLook.enabled = true;
+
+        cameraLook.Sensitivity_X = 10f;
+        cameraLook.Sensitivity_Y = 10f;
         nonMobileInput.enabled = true;
         joyStickCanvas.SetActive(true);
         movementController.Acceleration = 10f;
         crouchToggle.isOn = false;
-        
+        dragLookHandler.sensitivityX = 10f;
+        dragLookHandler.sensitivityY = 10f;
+        waitDialogues.gameObject.SetActive(false);
+
+
     }
 
     public void OpeningSceneFinised()
     {
-  
+
         StartCoroutine(CameraZoomEffectReset());
-       
+
 
     }
-    
- 
 
 
-
-    
 }
+
+
+

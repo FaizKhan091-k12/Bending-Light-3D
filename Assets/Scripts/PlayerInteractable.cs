@@ -22,6 +22,7 @@ public class PlayerInteractable : MonoBehaviour
     
     [Header("Pickup Refrences")]
     [SerializeField] Button handIconPickupButton;
+    [SerializeField] Button startExpButton;
     [SerializeField] Transform pickupLocations;
     [SerializeField] Transform GlassDropLocation;
     [SerializeField] Transform laserDropLocation;
@@ -46,7 +47,10 @@ public class PlayerInteractable : MonoBehaviour
     [SerializeField] float fadeDuration;
     [SerializeField] GameObject experimentCam;
     [SerializeField] GameObject playerCam;
-    
+    [SerializeField] AudioSource[] startingAudioSources;
+    [SerializeField] AudioSource experimentAudioSources;
+    [SerializeField] GameObject classroom;
+     
     
     Interactable currentInteractable;
     float t = 0f;
@@ -66,27 +70,31 @@ public class PlayerInteractable : MonoBehaviour
    private void Update()
    {
        MouseStateController();
-       if (!startExperimentKeyIndicator)
-       {
-           if (!itemInHand && !bothObjectiveCompleted)
-           {
-               RayCastItems();
-           }
-           else
-           {
+        if (!startExperimentKeyIndicator)
+        {
+            if (!itemInHand && !bothObjectiveCompleted)
+            {
+                RayCastItems();
+            }
+            else
+            {
 
-               if (bothObjectiveCompleted) return;
-               CalculateDistancebtwTableNPlayer();
-               InstructionPanel.SetActive(false);
+                if (bothObjectiveCompleted) return;
+                CalculateDistancebtwTableNPlayer();
+                InstructionPanel.SetActive(false);
+                startExpButton.gameObject.SetActive(false);
+        
 
-           }
-           
-          
-       }
-       else
-       {
-           InstructionPanel.SetActive(true);
-       }
+            }
+
+
+        }
+        else
+        {
+            InstructionPanel.SetActive(true);
+            startExpButton.gameObject.SetActive(true);
+            handIconPickupButton.gameObject.SetActive(false);
+        }
 
        if (startExperimentKeyIndicator)
        {
@@ -105,20 +113,25 @@ public class PlayerInteractable : MonoBehaviour
 
    }
 
-   private void CalculateDistancebtwTableNPlayer()
-   {
-       float distance = Vector3.Distance(player.position, experimentTable.position);
-       if (distance < itemDropDistance)
-       {
-           handIconPickupButton.gameObject.SetActive(true);
-           Interact(currentInteractable);
-       }
-       else
-       {
-           handIconPickupButton.gameObject.SetActive(false);
-
-       }
+    public void StartIndicatorFalse()
+    {
+     startExperimentKeyIndicator = false;
    }
+
+   private void CalculateDistancebtwTableNPlayer()
+    {
+        float distance = Vector3.Distance(player.position, experimentTable.position);
+        if (distance < itemDropDistance)
+        {
+            handIconPickupButton.gameObject.SetActive(true);
+            Interact(currentInteractable);
+        }
+        else
+        {
+            handIconPickupButton.gameObject.SetActive(false);
+
+        }
+    }
 
    private void MouseStateController()
    {
@@ -190,12 +203,14 @@ public class PlayerInteractable : MonoBehaviour
                 if (interactable != null)
                 {
                     ObjectPickAndDrop(interactable);
+                    Debug.Log("First");
                 }
             }
             else
             {
                 handIconPickupButton.interactable = false;
                 StartExperiment();
+                Debug.Log("Second");
             }
            
         });
@@ -209,12 +224,7 @@ public class PlayerInteractable : MonoBehaviour
                     ObjectPickAndDrop(interactable);
                 }
             }
-         
-
-
-
-
-        }
+         }
 
     }
 
@@ -350,6 +360,11 @@ public class PlayerInteractable : MonoBehaviour
             t += Time.deltaTime;
             float alpha = Mathf.Lerp(.25f, 1f, t / fadeDuration);
             imageToFadeIn.color = new Color(color.r, color.g, color.b, alpha);
+            for (int i = 0; i < startingAudioSources.Length; i++)
+            {
+                
+                startingAudioSources[i].volume = Mathf.Lerp(.3f, 0f, t / fadeDuration);
+            }
             experimentCam.SetActive(true);
             openingSceneController.TurnOFFPlayerControls();
             playerCam.transform.SetParent(experimentCam.transform);
@@ -359,11 +374,12 @@ public class PlayerInteractable : MonoBehaviour
             yield return null;
         }
         
+        
         handIconPickupButton.gameObject.SetActive(false);
         openingSceneController.joyStickCanvas.transform.GetChild(0).gameObject.SetActive(false);
         playerCam.SetActive(false);
 
-       Invoke(nameof(ExperimentWindowStart),1f);
+        Invoke(nameof(ExperimentWindowStart),1f);
 
     }
 
@@ -385,11 +401,16 @@ public class PlayerInteractable : MonoBehaviour
             t += Time.deltaTime;
             float alpha = Mathf.Lerp(1f, 0f, t / fadeDuration);
             imageToFadeIn.color = new Color(color.r, color.g, color.b, alpha);
+            experimentAudioSources.volume = Mathf.Lerp(0, .3f, t / fadeDuration);
+
             yield return null;
         }
 
         FindFirstObjectByType<OpeningSceneController>()
             .PlayDialogue(OpeningSceneController.DialogueType.LaserOn);
+
+        classroom.SetActive(false);
+            
     }
 
 

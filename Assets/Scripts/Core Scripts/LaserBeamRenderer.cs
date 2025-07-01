@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.UI.ProceduralImage;
 using System.Collections.Generic;
 
-[RequireComponent(typeof(Camera))]
+
 public class LaserBeamRenderer : MonoBehaviour
 {
     [Header("Laser Properties")]
@@ -60,7 +60,7 @@ public class LaserBeamRenderer : MonoBehaviour
 
     [SerializeField] TextMeshProUGUI refelectiveIntensity;
     [SerializeField] TextMeshProUGUI transmittedIntensity;
-    private Material laserMaterial;
+    public Material laserMaterial;
     private Color beamColor;
     public bool didRefract = false;
     public bool didReflect = false;
@@ -75,8 +75,9 @@ public class LaserBeamRenderer : MonoBehaviour
 
     void Start()
     {
-        MaterialInitilizer();
-
+      
+          MaterialInitilizer();
+      
         laserColorSlider.onValueChanged.AddListener(_ =>
         {
             wavelength = laserColorSlider.value;
@@ -89,6 +90,7 @@ public class LaserBeamRenderer : MonoBehaviour
                 leftSideMaterialsArray[i].SetActive(i == leftDropDown.value);
 
             leftMaterial = leftDropDown.options[leftDropDown.value].text.ToLower();
+
         });
 
         rightDropDown.onValueChanged.AddListener(_ =>
@@ -97,10 +99,11 @@ public class LaserBeamRenderer : MonoBehaviour
                 rightSideMaterialsArray[i].SetActive(i == rightDropDown.value);
 
             rightMaterial = rightDropDown.options[rightDropDown.value].text.ToLower();
+      
         });
 
-        Shader shader = Shader.Find("Unlit/Color");
-        laserMaterial = new Material(shader);
+        // Shader shader = Shader.Find("Unlit/Color");
+        // laserMaterial = new Material(shader);
 
         leftRefractiveSlider.onValueChanged.AddListener(_ =>
         {
@@ -153,6 +156,7 @@ public class LaserBeamRenderer : MonoBehaviour
 
     void OnRenderObject()
     {
+        
         didRefract = false;
         didReflect = false;
 
@@ -160,9 +164,9 @@ public class LaserBeamRenderer : MonoBehaviour
 
         laserMaterial.SetPass(0);
         GL.PushMatrix();
-        GL.Begin(GL.QUADS);
+        GL.Begin(GL.TRIANGLES);
         GL.Color(beamColor);
-
+ 
         Vector3 origin = laserStart.position;
         Vector3 direction = laserStart.TransformDirection(laserDirection.normalized);
         float remainingLength = laserLength;
@@ -215,8 +219,8 @@ public class LaserBeamRenderer : MonoBehaviour
                     transmittedPPercent = 100f - reflectedPPercent;
                     transmittedAvgPercent = 0.5f * (transmittedSPercent + transmittedPPercent);
 
-                    Debug.Log($"Rs: {reflectedSPercent:F2}% | Rp: {reflectedPPercent:F2}% | " +
-                              $"Ts: {transmittedSPercent:F2}% | Tp: {transmittedPPercent:F2}% | AvgT: {transmittedAvgPercent:F2}%");
+                    // Debug.Log($"Rs: {reflectedSPercent:F2}% | Rp: {reflectedPPercent:F2}% | " +
+                    //           $"Ts: {transmittedSPercent:F2}% | Tp: {transmittedPPercent:F2}% | AvgT: {transmittedAvgPercent:F2}%");
 
                     refelectiveIntensity.text = reflectedSPercent.ToString("F2") + "%";
                     transmittedIntensity.text = transmittedSPercent.ToString("F2") + "%";                    
@@ -285,15 +289,26 @@ public class LaserBeamRenderer : MonoBehaviour
         return r * incident + (r * cosI - cosT) * normal;
     }
 
-    void DrawQuadBeam(Vector3 start, Vector3 end, float width)
-    {
-        Vector3 cameraDir = Camera.main.transform.forward;
-        Vector3 side = Vector3.Cross((end - start).normalized, cameraDir).normalized * width;
-        GL.Vertex(start - side);
-        GL.Vertex(start + side);
-        GL.Vertex(end + side);
-        GL.Vertex(end - side);
-    }
+   void DrawQuadBeam(Vector3 start, Vector3 end, float width)
+{
+    Vector3 cameraDir = Camera.main.transform.forward;
+    Vector3 side = Vector3.Cross((end - start).normalized, cameraDir).normalized * width;
+
+    Vector3 v1 = start - side;
+    Vector3 v2 = start + side;
+    Vector3 v3 = end + side;
+    Vector3 v4 = end - side;
+
+    // Triangle 1: v1, v2, v3
+    GL.Vertex(v1);
+    GL.Vertex(v2);
+    GL.Vertex(v3);
+
+    // Triangle 2: v3, v4, v1
+    GL.Vertex(v3);
+    GL.Vertex(v4);
+    GL.Vertex(v1);
+}
 
     Color WavelengthToRGB(float wavelength)
     {

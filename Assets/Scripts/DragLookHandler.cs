@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class DragLookHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
@@ -12,6 +13,14 @@ public class DragLookHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHan
 
     private bool isDragging = false;
     private float xRotation = 0f;
+
+    public Slider slider;
+
+
+    void Start()
+    {
+        slider.onValueChanged.AddListener(delegate { sensitivityX = slider.value; sensitivityY = slider.value; });
+    }
 
     public void OnPointerDown(PointerEventData eventData)
     {

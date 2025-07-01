@@ -1,13 +1,17 @@
 
 using UnityEngine; 
 using UnityEngine.EventSystems; 
-using System; 
+using System;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 namespace FirstPersonMobileTools.DynamicFirstPerson 
 { 
-	public class CameraLook : MonoBehaviour { public enum TouchDetectMode { FirstTouch, LastTouch, All }
+	public class CameraLook : MonoBehaviour
+	{
+		public enum TouchDetectMode { FirstTouch, LastTouch, All }
 
+[SerializeField] private Image[] ignoredUIImages;
 
 	[HideInInspector] public float Sensitivity_X { private get { return m_Sensitivity.x; } set { m_Sensitivity.x = value; } }
 	[HideInInspector] public float Sensitivity_Y { private get { return m_Sensitivity.y; } set { m_Sensitivity.y = value; } }
@@ -37,40 +41,47 @@ namespace FirstPersonMobileTools.DynamicFirstPerson
 		OnChangeSettings();
 	}
 
-	private void Update()
-	{
+private void Update()
+{
+#if UNITY_EDITOR && (UNITY_WEBGL || UNITY_ANDROID || UNITY_IOS)
+    if (Input.touchCount == 0) return;
+
+    foreach (var touch in Input.touches)
+    {
+        // ✅ Restrict to left half of screen
+        if (touch.position.x < Screen.width * 0.5f) continue;
+
+        // ✅ Ignore touches over UI elements (like images with raycast)
+        if (touch.phase == TouchPhase.Began &&
+            m_EventSystem != null &&
+            TouchIgnore.Instance != null &&
+            !TouchIgnore.Instance.IsTouchOverIgnoredImage(touch) &&
+            !m_EventSystem.IsPointerOverGameObject(touch.fingerId) &&
+            m_AvailableTouchesId.Count < m_TouchLimit)
+        {
+            m_AvailableTouchesId.Add(touch.fingerId.ToString());
+        }
+
+        if (m_AvailableTouchesId.Count == 0) continue;
+
+        if (m_IsTouchAvailable(touch))
+        {
+            delta += new Vector2(touch.deltaPosition.x, touch.deltaPosition.y);
+
+            if (touch.phase == TouchPhase.Ended)
+                m_AvailableTouchesId.Remove(touch.fingerId.ToString());
+        }
+        else if (touch.phase == TouchPhase.Ended)
+        {
+            m_AvailableTouchesId.Remove(touch.fingerId.ToString());
+        }
+    }
+#else
+    delta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+#endif
+}
 
 
-#if  UNITY_EDITOR && (UNITY_WEBGL || UNITY_ANDROID || UNITY_IOS) 
-          if (Input.touchCount == 0) return;
-          foreach (var touch in Input.touches)
-          {
-	          if (touch.phase == TouchPhase.Began && m_EventSystem != null &&
-	              !m_EventSystem.IsPointerOverGameObject(touch.fingerId) && m_AvailableTouchesId.Count < m_TouchLimit)
-	          {
-		          m_AvailableTouchesId.Add(touch.fingerId.ToString());
-	          }
-
-
-	          if (m_AvailableTouchesId.Count == 0) continue;
-
-	          if (m_IsTouchAvailable(touch))
-	          {
-		          delta += new Vector2(touch.deltaPosition.x, touch.deltaPosition.y);
-		          if (touch.phase == TouchPhase.Ended) m_AvailableTouchesId.Remove(touch.fingerId.ToString());
-	          }
-	          else if (touch.phase == TouchPhase.Ended)
-	          {
-		          m_AvailableTouchesId.Remove(touch.fingerId.ToString());
-	          }
-			  
-          }
-
-
-#else 
-		delta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")); 
-#endif 
-	}
 
 
 	private void LateUpdate()

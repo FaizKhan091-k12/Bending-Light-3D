@@ -60,6 +60,7 @@ public class InitiateExperiment : MonoBehaviour
 
    public void InitizeExperiment()
    {
+      Debug.Log("Test");
       expetimentText.SetActive(false);
       laserDummy.SetActive(false);
       waterBlockDummy.SetActive(false);

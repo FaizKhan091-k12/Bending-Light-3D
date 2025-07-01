@@ -3,7 +3,6 @@ using System.Collections;
 using System.Resources;
 using DG.Tweening;
 using TMPro;
-using UnityEditor.Timeline.Actions;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.UI.ProceduralImage;
@@ -50,7 +49,13 @@ public class LaserMovementController : MonoBehaviour
 
     void OnEnable()
     {
-        StartCoroutine(StartOutline());
+        outline.OutlineWidth = 0f;
+        Invoke(nameof(LaserONIndicator), 5);
+    }
+
+    public void LaserONIndicator()
+    {
+         StartCoroutine(StartOutline());
     }
     void Start()
     {
@@ -135,7 +140,7 @@ public class LaserMovementController : MonoBehaviour
             isLaserON = true;
             incidenceAngleImage.SetActive(isLaserON);
             incidenceRayText.SetActive(isLaserON);
-            FindFirstObjectByType<LaserBeamRenderer>().laserLength = 1.5f;
+             FindFirstObjectByType<LaserBeamRenderer>().laserLength = 1.5f;
             outline.enabled = false;
             if (!firstTime)
             {
@@ -150,7 +155,7 @@ public class LaserMovementController : MonoBehaviour
             isLaserON = false;
             incidenceAngleImage.SetActive(isLaserON);
             incidenceRayText.SetActive(isLaserON);
-            FindFirstObjectByType<LaserBeamRenderer>().laserLength = 0f;
+             FindFirstObjectByType<LaserBeamRenderer>().laserLength = 0f;
         }
         else
         {
