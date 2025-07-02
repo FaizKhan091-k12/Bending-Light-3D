@@ -63,10 +63,10 @@ public class LaserMovementController : MonoBehaviour
     {
         incidenceAngleImage.SetActive(isLaserON);
         incidenceRayText.SetActive(isLaserON);
-        // bottomRightUI.transform.localScale = Vector3.zero;
-        // topLeftUI.transform.localScale = Vector3.zero;
-        // topRightUI.transform.localScale = Vector3.zero;
-        // bottomLeftUI.transform.localScale = Vector3.zero;
+        bottomRightUI.transform.localScale = Vector3.zero;
+        topLeftUI.transform.localScale = Vector3.zero;
+        topRightUI.transform.localScale = Vector3.zero;
+        bottomLeftUI.transform.localScale = Vector3.zero;
 
         AngleSliderControlls();
         showAngleToggle.onValueChanged.AddListener(delegate
@@ -143,7 +143,7 @@ public class LaserMovementController : MonoBehaviour
             laserSource.PlayOneShot(laserClip);
             incidenceAngleImage.SetActive(isLaserON);
             incidenceRayText.SetActive(isLaserON);
-             FindFirstObjectByType<LaserBeamRenderer>().laserLength = 1.5f;
+             FindFirstObjectByType<LaserBeamRenderer>().laserLength = 40f;
             outline.enabled = false;
             if (!firstTime)
             {

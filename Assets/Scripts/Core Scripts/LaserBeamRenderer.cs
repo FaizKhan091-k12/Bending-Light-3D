@@ -12,7 +12,7 @@ public class LaserBeamRenderer : MonoBehaviour
     [Header("Laser Properties")]
     public Transform laserStart;
     public Vector3 laserDirection = Vector3.forward;
-    [Range(0f, 4f)] public float laserLength = 10f;
+    [Range(0f, 40f)] public float laserLength = 40f;
     public float beamWidth = 0.05f;
     public float reflectiveBeamWidht;
 
@@ -74,6 +74,31 @@ public class LaserBeamRenderer : MonoBehaviour
         { "air", (1.00029f, 1.00027f) },
         { "custom", (1.0f, 1.0f) }
     };
+// Add these new fields
+private LineRenderer incidentLine;
+private LineRenderer reflectedLine;
+private LineRenderer refractedLine;
+
+    void Awake()
+    {
+        incidentLine = CreateLineRenderer("IncidentLine", 0.01f);
+        reflectedLine = CreateLineRenderer("ReflectedLine", 0.01f);
+        refractedLine = CreateLineRenderer("RefractedLine", 0.005f);
+    }
+LineRenderer CreateLineRenderer(string name, float width)
+{
+    GameObject lineObj = new GameObject(name);
+    lineObj.transform.parent = transform;
+    var lr = lineObj.AddComponent<LineRenderer>();
+    lr.material = laserMaterial;
+    lr.widthMultiplier = width;
+    lr.positionCount = 0;
+    lr.useWorldSpace = true;
+    lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+    lr.receiveShadows = false;
+    lr.alignment = LineAlignment.View;
+    return lr;
+}
 
     void Start()
     {
@@ -130,6 +155,7 @@ public class LaserBeamRenderer : MonoBehaviour
 
     void Update()
 {
+        UpdateLaserBeam();
         refractionAngleText3D.transform.parent.localEulerAngles = new Vector3(90, 0, incidenceAngle - refractionAngle);
         reflectionAngleText3D.transform.parent.localEulerAngles = new Vector3(90, 0, Mathf.Abs(incidenceAngle + reflectionAngle));
 
@@ -159,12 +185,12 @@ public class LaserBeamRenderer : MonoBehaviour
 
 
 
-   
 
-  
+
+
     // void OnRenderObject()
     // {
-        
+
     //     didRefract = false;
     //     didReflect = false;
 
@@ -174,7 +200,7 @@ public class LaserBeamRenderer : MonoBehaviour
     //     GL.PushMatrix();
     //     GL.Begin(GL.TRIANGLES);
     //     GL.Color(beamColor);
- 
+
     //     Vector3 origin = laserStart.position;
     //     Vector3 direction = laserStart.TransformDirection(laserDirection.normalized);
     //     float remainingLength = laserLength;
@@ -266,7 +292,7 @@ public class LaserBeamRenderer : MonoBehaviour
     //         {
     //             Vector3 endPoint = origin + direction * remainingLength;
     //             DrawQuadBeam(lastPoint, endPoint, beamWidth);
-                
+
 
     //             break;
     //         }
@@ -275,7 +301,137 @@ public class LaserBeamRenderer : MonoBehaviour
     //     GL.End();
     //     GL.PopMatrix();
     // }
+    void UpdateLaserBeam()
+    {
+        didRefract = false;
+        didReflect = false;
 
+        incidentLine.positionCount = 0;
+        reflectedLine.positionCount = 0;
+        refractedLine.positionCount = 0;
+
+        if (!laserStart || !laserMaterial) return;
+
+        beamColor = useWavelengthColor ? WavelengthToRGB(wavelength) : Color.red;
+        laserMaterial.color = beamColor;
+
+        // Set beam color to all line renderers
+        incidentLine.startColor = beamColor; incidentLine.endColor = beamColor;
+        reflectedLine.startColor = beamColor; reflectedLine.endColor = beamColor;
+        refractedLine.startColor = beamColor; refractedLine.endColor = beamColor;
+
+        Vector3 origin = laserStart.position;
+        Vector3 direction = laserStart.TransformDirection(laserDirection.normalized);
+        float remainingLength = laserLength;
+        float currentIOR = GetIORFromMaterial(leftMaterial, wavelength);
+        leftIORText.text = $"{currentIOR:F3}";
+
+        bool insideMaterial = false;
+        List<Vector3> incidentPoints = new() { origin };
+        List<Vector3> reflectedPoints = new();
+        List<Vector3> refractedPoints = new();
+
+        for (int i = 0; i < maxRefractions && remainingLength > 0; i++)
+        {
+            if (Physics.Raycast(origin, direction, out RaycastHit hit, remainingLength, refractableLayer))
+            {
+                Vector3 hitPoint = hit.point;
+                Vector3 normal = hit.normal.normalized;
+                Vector3 incoming = direction.normalized;
+
+                incidentPoints.Add(hitPoint);
+
+                incidenceAngle = Vector3.Angle(normal, -incoming);
+                string nextMaterial = insideMaterial ? leftMaterial : rightMaterial;
+                float nextIOR = GetIORFromMaterial(nextMaterial, wavelength);
+                rightIORText.text = $"{nextIOR:F3}";
+
+                Vector3 reflectDir = Vector3.Reflect(incoming, normal);
+                reflectionAngle = Vector3.Angle(reflectDir, normal);
+                float thetaI_rad = incidenceAngle * Mathf.Deg2Rad;
+                float sinThetaT = (currentIOR / nextIOR) * Mathf.Sin(thetaI_rad);
+                Vector3 refractedDir = Vector3.zero;
+
+                if (sinThetaT >= 1f)
+                {
+                    didReflect = true;
+                    Vector3 reflectEnd = hitPoint + reflectDir * remainingLength;
+                    reflectedPoints.Add(hitPoint);
+                    reflectedPoints.Add(reflectEnd);
+                    break;
+                }
+                else
+                {
+                    float cosThetaI = Mathf.Cos(thetaI_rad);
+                    float cosThetaT = Mathf.Sqrt(1f - sinThetaT * sinThetaT);
+                    float rs = (currentIOR * cosThetaI - nextIOR * cosThetaT) / (currentIOR * cosThetaI + nextIOR * cosThetaT);
+                    float rp = (currentIOR * cosThetaT - nextIOR * cosThetaI) / (currentIOR * cosThetaT + nextIOR * cosThetaI);
+
+                    reflectedSPercent = rs * rs * 100f;
+                    reflectedPPercent = rp * rp * 100f;
+                    transmittedSPercent = 100f - reflectedSPercent;
+                    transmittedPPercent = 100f - reflectedPPercent;
+                    transmittedAvgPercent = 0.5f * (transmittedSPercent + transmittedPPercent);
+
+                    refelectiveIntensity.text = reflectedSPercent.ToString("F2") + "%";
+                    transmittedIntensity.text = transmittedSPercent.ToString("F2") + "%";
+
+                    if (reflectedSPercent > 0.5f)
+                    {
+                        didReflect = true;
+                        Vector3 reflectEnd = hitPoint + reflectDir * remainingLength * (reflectedSPercent / 100f);
+                        reflectedPoints.Add(hitPoint);
+                        reflectedPoints.Add(reflectEnd);
+                    }
+
+                    refractedDir = RefractRay(incoming, normal, currentIOR, nextIOR);
+                    refractionAngle = Vector3.Angle(-normal, refractedDir);
+
+                    if (transmittedSPercent > 0.5f && refractedDir != Vector3.zero)
+                    {
+                        didRefract = true;
+                        Vector3 refractEnd = hitPoint + refractedDir * remainingLength * (transmittedSPercent / 100f);
+                        refractedPoints.Add(hitPoint);
+                        refractedPoints.Add(refractEnd);
+                    }
+                }
+
+                origin = (refractedDir == Vector3.zero) ? hitPoint + reflectDir * 0.001f : hitPoint + refractedDir * 0.001f;
+                direction = (refractedDir == Vector3.zero) ? reflectDir : refractedDir;
+                remainingLength -= Vector3.Distance(hit.point, origin);
+                insideMaterial = !insideMaterial;
+                currentIOR = nextIOR;
+            }
+            else
+            {
+                Vector3 endPoint = origin + direction * remainingLength;
+                //incidentPoints.Add(endPoint);
+                break;
+            }
+        }
+
+        // Assign points to line renderers
+        incidentLine.positionCount = incidentPoints.Count;
+        incidentLine.SetPositions(incidentPoints.ToArray());
+
+        if (didReflect)
+        {
+            reflectedLine.positionCount = reflectedPoints.Count;
+            reflectedLine.widthMultiplier = reflectiveBeamWidht * (reflectedSPercent / 100f);
+            reflectedLine.SetPositions(reflectedPoints.ToArray());
+        }
+
+        if (didRefract)
+        {
+            refractedLine.positionCount = refractedPoints.Count;
+            refractedLine.widthMultiplier = reflectiveBeamWidht * (transmittedSPercent / 100f);
+            refractedLine.SetPositions(refractedPoints.ToArray());
+        }
+        else
+        {
+            refractedLine.positionCount = 0;
+        }
+    }
     float GetIORFromMaterial(string material, float wavelengthNm)
     {
         if (!materialIORs.TryGetValue(material.ToLower(), out var range))
