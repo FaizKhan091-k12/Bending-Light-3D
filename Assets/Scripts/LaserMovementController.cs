@@ -63,10 +63,10 @@ public class LaserMovementController : MonoBehaviour
     {
         incidenceAngleImage.SetActive(isLaserON);
         incidenceRayText.SetActive(isLaserON);
-        bottomRightUI.transform.localScale = Vector3.zero;
-        topLeftUI.transform.localScale = Vector3.zero;
-        topRightUI.transform.localScale = Vector3.zero;
-        bottomLeftUI.transform.localScale = Vector3.zero;
+        // bottomRightUI.transform.localScale = Vector3.zero;
+        // topLeftUI.transform.localScale = Vector3.zero;
+        // topRightUI.transform.localScale = Vector3.zero;
+        // bottomLeftUI.transform.localScale = Vector3.zero;
 
         AngleSliderControlls();
         showAngleToggle.onValueChanged.AddListener(delegate

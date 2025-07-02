@@ -57,10 +57,11 @@ public class PlayerInteractable : MonoBehaviour
     bool glassHasPickedUp = false;
     bool laserHasPickedUp = false;
     public bool startExperimentKeyIndicator = false;
-    
-
+    public Button backButton;
+    public bool InLaserMode;
    private void Start()
    {
+        backButton.onClick.AddListener(delegate { lockMouseState = true; });
    
        InstructionPanel.SetActive(false);
        handIconPickupButton.gameObject.SetActive(false);
@@ -108,11 +109,21 @@ public class PlayerInteractable : MonoBehaviour
 
         }
 
+        if (InLaserMode)
+        {
+            lockMouseState = false;
+             Cursor.lockState = CursorLockMode.None;
+           Cursor.visible = true;
+}
 
 #if  UNITY_WEBGL || UNITY_STANDALONE|| UNITY_EDITOR 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            lockMouseState = !lockMouseState;
+            if (!InLaserMode)
+            {
+
+                lockMouseState = !lockMouseState;
+            }
 
         }
 #elif UNITY_ANDROID 
@@ -356,6 +367,7 @@ public class PlayerInteractable : MonoBehaviour
 
     public void StartExperiment()
     {
+        InLaserMode = true;
         StartCoroutine(StartExperimentCoRoutine());
     }
     IEnumerator  StartExperimentCoRoutine()

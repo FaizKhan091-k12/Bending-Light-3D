@@ -92,26 +92,29 @@ namespace FirstPersonMobileTools.DynamicFirstPerson
             get { return !m_CharacterController.isGrounded && !m_IsFloating; }
         }
 
-        private float m_speed
+       private float m_speed
+{
+    get
+    {
+        bool isMoving = Input_Movement.magnitude > 0.01f;
+
+        // Check keyboard input only if joystick is not used
+        if (!isMoving)
         {
-            get
-            {
-                bool isMoving = Input_Movement.magnitude > 0.01f;
-
-#if UNITY_EDITOR || UNITY_STANDALONE
-                isMoving |= External_Input_Movement.magnitude > 0.01f;
-#endif
-
-                if (Input_Crouch) return m_CrouchSpeed;
-                if (Input_Sprint) return m_RunSpeed;
-                return isMoving ? m_WalkSpeed : 0.0f;
-            }
+            float h = Input.GetAxis("Horizontal");
+            float v = Input.GetAxis("Vertical");
+            isMoving = new Vector2(h, v).magnitude > 0.01f;
         }
 
+        if (Input_Crouch) return m_CrouchSpeed;
+        if (Input_Sprint) return m_RunSpeed;
+        return isMoving ? m_WalkSpeed : 0.0f;
+    }
+}
+
+
         public Vector2 External_Input_Movement;
-    #if UNITY_EDITOR
-       
-    #endif
+
 
 
         private void Start() 
@@ -147,44 +150,47 @@ namespace FirstPersonMobileTools.DynamicFirstPerson
             m_HeadMovement = Vector3.zero;
         }
 
-        private void Handle_InputMovement()
-        {
+       private void Handle_InputMovement()
+{
+    Vector2 moveInput = Vector2.zero;
 
-            Vector2 moveInput = Vector2.zero;
+    // Prefer joystick input if available
+    if (Input_Movement != Vector2.zero)
+    {
+        moveInput = Input_Movement;
+    }
+    else
+    {
+        // Fallback to keyboard input
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
+        moveInput = new Vector2(h, v);
+    }
 
-// Prefer joystick if present
-            if (Input_Movement != Vector2.zero)
-            {
-                moveInput = Input_Movement;
-            }
-#if UNITY_EDITOR || UNITY_STANDALONE
-// Fallback to keyboard input (WASD/arrow keys)
-            else
-            {
-                float h = Input.GetAxis("Horizontal");
-                float v = Input.GetAxis("Vertical");
-                moveInput = new Vector2(h, v);
-            }
-#endif
+    // Calculate movement direction
+    Vector3 walkTargetDirection =
+        transform.forward * (moveInput.y * m_speed) +
+        transform.right * (moveInput.x * m_speed);
 
+    // Apply forward movement if sprint is pressed and no input
+    if (Input_Sprint && walkTargetDirection == Vector3.zero)
+    {
+        walkTargetDirection = transform.forward * m_speed;
+    }
 
-            Vector3 walkTargetDirection =
-                transform.forward * (moveInput.y * m_speed) +
-                transform.right * (moveInput.x * m_speed);
+    // Smoothly move towards target
+    m_MovementDirection.x = Mathf.MoveTowards(m_MovementDirection.x, walkTargetDirection.x, m_Acceleration * Time.deltaTime);
+    m_MovementDirection.z = Mathf.MoveTowards(m_MovementDirection.z, walkTargetDirection.z, m_Acceleration * Time.deltaTime);
 
+    // Handle landing momentum decay
+    if (m_LandMomentum != m_OriginalLandMomentum)
+    {
+        m_LandMomentum = Mathf.Clamp(m_LandMomentum + Time.deltaTime, 0, m_OriginalLandMomentum);
+        m_MovementDirection.x *= m_LandMomentum / m_OriginalLandMomentum;
+        m_MovementDirection.z *= m_LandMomentum / m_OriginalLandMomentum;
+    }
+}
 
-            walkTargetDirection = Input_Sprint && walkTargetDirection == Vector3.zero? transform.forward * m_speed : walkTargetDirection;
-
-            m_MovementDirection.x = Mathf.MoveTowards(m_MovementDirection.x, walkTargetDirection.x, m_Acceleration * Time.deltaTime);
-            m_MovementDirection.z = Mathf.MoveTowards(m_MovementDirection.z, walkTargetDirection.z, m_Acceleration * Time.deltaTime);        
-
-            if (m_LandMomentum != m_OriginalLandMomentum)
-            {
-                m_LandMomentum = Mathf.Clamp(m_LandMomentum + Time.deltaTime, 0, m_OriginalLandMomentum);
-                m_MovementDirection.x *= m_LandMomentum / m_OriginalLandMomentum;
-                m_MovementDirection.z *= m_LandMomentum / m_OriginalLandMomentum;
-            }
-        }
 
         private void Handle_AirMovement()
         {
