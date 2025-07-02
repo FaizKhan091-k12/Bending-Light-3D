@@ -27,7 +27,7 @@ public class OpeningSceneController : MonoBehaviour
     [SerializeField] private AudioSource openingBackgroundAudio;
 
     [Header("Player References")]
-    [SerializeField] private CameraLook cameraLook;
+    [SerializeField] public CameraLook cameraLook;
     [SerializeField] private nonMobileInput nonMobileInput;
     [SerializeField] MovementController movementController;
     [SerializeField] DragLookHandler dragLookHandler;
@@ -46,7 +46,7 @@ public class OpeningSceneController : MonoBehaviour
 
     public void TurnOFFPlayerControls()
     {
-        cameraLook.enabled = false;
+      //  cameraLook.enabled = false;
         nonMobileInput.enabled = false;
         movementController.Acceleration = 0;
     }
@@ -82,13 +82,13 @@ public class OpeningSceneController : MonoBehaviour
     private void Awake()
     {
 
-#if UNITY_ANDROID || UNITY_EDITOR
-        dragLookHandler.enabled = true;
-        cameraLook.enabled = false;
-
-#elif UNITY_WEBGL || UNITY_STANDALONE
-       dragLookHandler.enabled = true;
+#if  UNITY_WEBGL || UNITY_STANDALONE|| UNITY_EDITOR 
         cameraLook.enabled = true;
+        dragLookHandler.enabled = true;
+      
+#elif UNITY_ANDROID 
+        cameraLook.enabled = false;
+        dragLookHandler.enabled = true;
 #endif 
 
     }
@@ -118,7 +118,7 @@ public class OpeningSceneController : MonoBehaviour
 
     IEnumerator InitiateOpeningScene()
     {
-        waitDialogues.gameObject.SetActive(true);
+        
         imageToFadeIn.color = Color.black;
         joyStickCanvas.SetActive(false);
         crouchToggle.isOn = true;
@@ -147,6 +147,7 @@ public class OpeningSceneController : MonoBehaviour
         }
 
         imageToFadeIn.gameObject.SetActive(false);
+        waitDialogues.gameObject.SetActive(true);
 
         PlayDialogue(DialogueType.Opening);
 

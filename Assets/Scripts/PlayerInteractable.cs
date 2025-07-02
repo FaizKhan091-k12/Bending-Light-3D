@@ -49,7 +49,7 @@ public class PlayerInteractable : MonoBehaviour
     [SerializeField] GameObject playerCam;
     [SerializeField] AudioSource[] startingAudioSources;
     [SerializeField] AudioSource experimentAudioSources;
-    [SerializeField] GameObject classroom;
+   [SerializeField] GameObject City;
      
     
     Interactable currentInteractable;
@@ -67,9 +67,9 @@ public class PlayerInteractable : MonoBehaviour
     
    }
 
-   private void Update()
-   {
-       MouseStateController();
+    private void Update()
+    {
+        MouseStateController();
         if (!startExperimentKeyIndicator)
         {
             if (!itemInHand && !bothObjectiveCompleted)
@@ -83,7 +83,7 @@ public class PlayerInteractable : MonoBehaviour
                 CalculateDistancebtwTableNPlayer();
                 InstructionPanel.SetActive(false);
                 startExpButton.gameObject.SetActive(false);
-        
+
 
             }
 
@@ -96,18 +96,28 @@ public class PlayerInteractable : MonoBehaviour
             handIconPickupButton.gameObject.SetActive(false);
         }
 
-       if (startExperimentKeyIndicator)
-       {
-           if (Input.GetKeyDown(pickupKey))
-           {
-               Debug.Log("Star");
-               handIconPickupButton.interactable = false;
-               StartExperiment();
-               startExperimentKeyIndicator = false;
-           }
+        if (startExperimentKeyIndicator)
+        {
+            if (Input.GetKeyDown(pickupKey))
+            {
+                Debug.Log("Star");
+                handIconPickupButton.interactable = false;
+                StartExperiment();
+                startExperimentKeyIndicator = false;
+            }
 
-       }
-     
+        }
+
+
+#if  UNITY_WEBGL || UNITY_STANDALONE|| UNITY_EDITOR 
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            lockMouseState = !lockMouseState;
+
+        }
+#elif UNITY_ANDROID 
+    lockMouseState = false;
+    #endif 
 
 
 
@@ -354,6 +364,8 @@ public class PlayerInteractable : MonoBehaviour
         Color color = imageToFadeIn.color;
         float t = 0f;
 
+        openingSceneController.cameraLook.enabled = false;
+        openingSceneController.joyStickCanvas.gameObject.SetActive(false);
        
         while (t < fadeDuration)
         {
@@ -362,7 +374,7 @@ public class PlayerInteractable : MonoBehaviour
             imageToFadeIn.color = new Color(color.r, color.g, color.b, alpha);
             for (int i = 0; i < startingAudioSources.Length; i++)
             {
-                
+
                 startingAudioSources[i].volume = Mathf.Lerp(.3f, 0f, t / fadeDuration);
             }
             experimentCam.SetActive(true);
@@ -370,13 +382,14 @@ public class PlayerInteractable : MonoBehaviour
             playerCam.transform.SetParent(experimentCam.transform);
             playerCam.transform.localPosition =
                 Vector3.Lerp(playerCam.transform.localPosition, Vector3.zero, t / fadeDuration);
-            playerCam.transform.localRotation = Quaternion.Lerp(playerCam.transform.localRotation, Quaternion.identity, (t / fadeDuration)*.1f);
+            playerCam.transform.localRotation = Quaternion.Lerp(playerCam.transform.localRotation, Quaternion.identity, t / fadeDuration * .1f);
             yield return null;
         }
         
         
         handIconPickupButton.gameObject.SetActive(false);
-        openingSceneController.joyStickCanvas.transform.GetChild(0).gameObject.SetActive(false);
+        Debug.Log("OSsee");
+      
         playerCam.SetActive(false);
 
         Invoke(nameof(ExperimentWindowStart),1f);
@@ -409,7 +422,7 @@ public class PlayerInteractable : MonoBehaviour
         FindFirstObjectByType<OpeningSceneController>()
             .PlayDialogue(OpeningSceneController.DialogueType.LaserOn);
 
-        classroom.SetActive(false);
+        City.SetActive(false);
             
     }
 

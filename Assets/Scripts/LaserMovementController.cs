@@ -42,6 +42,8 @@ public class LaserMovementController : MonoBehaviour
 
     [SerializeField] GameObject incidenceAngleImage;
     [SerializeField] GameObject incidenceRayText;
+    [SerializeField] AudioSource laserSource;
+    [SerializeField] AudioClip laserClip;
     bool firstTime = false;
 
     Color onColor = Color.green;
@@ -138,6 +140,7 @@ public class LaserMovementController : MonoBehaviour
         if (!isLaserON)
         {
             isLaserON = true;
+            laserSource.PlayOneShot(laserClip);
             incidenceAngleImage.SetActive(isLaserON);
             incidenceRayText.SetActive(isLaserON);
              FindFirstObjectByType<LaserBeamRenderer>().laserLength = 1.5f;
