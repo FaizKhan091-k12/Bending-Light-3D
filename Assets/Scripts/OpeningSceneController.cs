@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI.ProceduralImage;
 using UnityEngine.UI;
 
+
 public class OpeningSceneController : MonoBehaviour
 {
 
@@ -13,6 +14,9 @@ public class OpeningSceneController : MonoBehaviour
     [SerializeField] private bool playOpeningScene = true;
 
     [SerializeField] public float subtitleSpeed;
+
+    public float givenTime;
+    public bool fastTime;
 
     [Space(10)]
     [Header("UI References")]
@@ -43,10 +47,15 @@ public class OpeningSceneController : MonoBehaviour
     [SerializeField] TextMeshProUGUI waitDialogues;
 
 
+    [SerializeField] GameObject bookShelfText;
+
+    public float minTextVal;
+    public float maxTextVal;
+    public float smoothTime;
 
     public void TurnOFFPlayerControls()
     {
-      //  cameraLook.enabled = false;
+        //  cameraLook.enabled = false;
         nonMobileInput.enabled = false;
         movementController.Acceleration = 0;
     }
@@ -62,6 +71,8 @@ public class OpeningSceneController : MonoBehaviour
     public enum DialogueType
     {
         Opening,
+
+        FindingItems,
         GlassPickup,
         LaserPickup,
         StartExperiment,
@@ -93,9 +104,9 @@ public class OpeningSceneController : MonoBehaviour
 
     }
 
-    private void Start()
+    private void OnEnable()
     {
-
+    
         if (playOpeningScene)
         {
 
@@ -114,7 +125,53 @@ public class OpeningSceneController : MonoBehaviour
         {
             settingsMenu.SetActive(!settingsMenu.activeSelf);
         }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            fastTime = !fastTime;
+            if (fastTime)
+            {
+
+                Time.timeScale = givenTime;
+            }
+            else
+            {
+                Time.timeScale = 1f;
+            }
+        }
+
+
+      
+
     }
+IEnumerator BookShelfLerp()
+{
+        bookShelfText.gameObject.SetActive(true);
+    float t = 0f;
+    bool goingUp = true;
+
+    Vector3 startPos = bookShelfText.transform.localPosition;
+    Vector3 minPos = new Vector3(startPos.x, startPos.y, minTextVal);
+    Vector3 maxPos = new Vector3(startPos.x, startPos.y, maxTextVal);
+
+    while (true) // Infinite loop for continuous ping-pong
+    {
+        t = 0f;
+
+        Vector3 from = goingUp ? minPos : maxPos;
+        Vector3 to = goingUp ? maxPos : minPos;
+
+        while (t < 1f)
+        {
+            t += Time.deltaTime * smoothTime;
+            bookShelfText.transform.localPosition = Vector3.Lerp(from, to, t);
+            yield return null;
+        }
+
+        goingUp = !goingUp; // Reverse direction
+    }
+}
+
 
     IEnumerator InitiateOpeningScene()
     {
@@ -249,8 +306,15 @@ public class OpeningSceneController : MonoBehaviour
         dragLookHandler.sensitivityX = 10f;
         dragLookHandler.sensitivityY = 10f;
         waitDialogues.gameObject.SetActive(false);
+        Invoke(nameof(FindingItemsClip), 2f);
+          StartCoroutine(BookShelfLerp());
 
+    }
 
+    public void FindingItemsClip()
+    {
+        //subtitlePanel.SetActive(true);
+         PlayDialogue(DialogueType.FindingItems);
     }
 
     public void OpeningSceneFinised()

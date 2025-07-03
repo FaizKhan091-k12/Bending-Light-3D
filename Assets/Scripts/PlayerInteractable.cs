@@ -41,6 +41,7 @@ public class PlayerInteractable : MonoBehaviour
     [SerializeField] GameObject objectiveComplete3;
 
     [SerializeField] private GameObject InstructionPanel;
+    [SerializeField] TextMeshProUGUI instructionText;
 
     [Header("Start Experiment Refrences")] 
     [SerializeField] ProceduralImage imageToFadeIn;
@@ -82,7 +83,7 @@ public class PlayerInteractable : MonoBehaviour
 
                 if (bothObjectiveCompleted) return;
                 CalculateDistancebtwTableNPlayer();
-                InstructionPanel.SetActive(false);
+                //InstructionPanel.SetActive(false);
                 startExpButton.gameObject.SetActive(false);
 
 
@@ -92,7 +93,7 @@ public class PlayerInteractable : MonoBehaviour
         }
         else
         {
-            InstructionPanel.SetActive(true);
+            //  InstructionPanel.SetActive(true);
             startExpButton.gameObject.SetActive(true);
             handIconPickupButton.gameObject.SetActive(false);
         }
@@ -112,11 +113,23 @@ public class PlayerInteractable : MonoBehaviour
         if (InLaserMode)
         {
             lockMouseState = false;
-             Cursor.lockState = CursorLockMode.None;
-           Cursor.visible = true;
-}
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
 
-#if  UNITY_WEBGL || UNITY_STANDALONE|| UNITY_EDITOR 
+
+        if (handIconPickupButton.gameObject.activeInHierarchy || startExpButton.gameObject.activeInHierarchy)
+        {
+
+            InstructionPanel.SetActive(true);
+        }
+        else
+        {
+            InstructionPanel.SetActive(false);
+
+        }
+
+#if UNITY_WEBGL || UNITY_STANDALONE || UNITY_EDITOR
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             if (!InLaserMode)
@@ -126,13 +139,13 @@ public class PlayerInteractable : MonoBehaviour
             }
 
         }
-#elif UNITY_ANDROID 
+#elif UNITY_ANDROID
     lockMouseState = false;
-    #endif 
+#endif
 
 
 
-   }
+    }
 
     public void StartIndicatorFalse()
     {
@@ -145,6 +158,8 @@ public class PlayerInteractable : MonoBehaviour
         if (distance < itemDropDistance)
         {
             handIconPickupButton.gameObject.SetActive(true);
+            instructionText.text = "Press E or tap on hand icon to drop item";
+          //  InstructionPanel.SetActive(true);
             Interact(currentInteractable);
         }
         else
@@ -188,10 +203,11 @@ public class PlayerInteractable : MonoBehaviour
             {
                 handIconPickupButton.gameObject.SetActive(true);
                 currentInteractable = interactable;
+                     instructionText.text = "Press E or tap on hand icon to pick the item";
                  Interact(interactable);
                  if (!itemInHand)
                  {
-                     InstructionPanel.SetActive(true);
+                   //  InstructionPanel.SetActive(true);
                  }
                 
                 
@@ -201,14 +217,14 @@ public class PlayerInteractable : MonoBehaviour
             {
                 
                 //handIconPickupButton.gameObject.SetActive(false);  
-                InstructionPanel.SetActive(false);
+              //  InstructionPanel.SetActive(false);
                // Debug.Log("First");
             }
         }
         else
         {
             handIconPickupButton.gameObject.SetActive(false);
-         //   InstructionPanel.SetActive(false);
+       //    InstructionPanel.SetActive(false);
           //  Debug.Log("Second");
         }
 
