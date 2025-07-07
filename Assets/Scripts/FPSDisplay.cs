@@ -39,7 +39,8 @@ namespace MirzaBeig.CinematicExplosionsFree
         public TextMeshProUGUI textMesh;
 
         // Get average FPS and frame delta (ms) for current interval (so far, if called early).
-
+    public bool fastTime;
+        public float givenTime;
         public float GetIntervalFPS()
         {
             // 1 / time.unscaledDeltaTime for same-frame results.
@@ -82,6 +83,22 @@ namespace MirzaBeig.CinematicExplosionsFree
                 style.fontStyle = FontStyle.Bold;
                 style.normal.textColor = colour;
             }
+
+
+
+                if (Input.GetKeyDown(KeyCode.Space))
+        {
+            fastTime = !fastTime;
+            if (fastTime)
+            {
+
+                Time.timeScale = givenTime;
+            }
+            else
+            {
+                Time.timeScale = 1f;
+            }
+        }
         }
 
         string GetFPSText()

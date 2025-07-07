@@ -51,6 +51,7 @@ public class PlayerInteractable : MonoBehaviour
     [SerializeField] AudioSource[] startingAudioSources;
     [SerializeField] AudioSource experimentAudioSources;
    [SerializeField] GameObject City;
+    [SerializeField] GameObject boardCanvas;
      
     
     Interactable currentInteractable;
@@ -60,14 +61,15 @@ public class PlayerInteractable : MonoBehaviour
     public bool startExperimentKeyIndicator = false;
     public Button backButton;
     public bool InLaserMode;
-   private void Start()
-   {
-        backButton.onClick.AddListener(delegate { lockMouseState = true; });
-   
-       InstructionPanel.SetActive(false);
-       handIconPickupButton.gameObject.SetActive(false);
     
-   }
+   private void Start()
+    {
+        backButton.onClick.AddListener(delegate { lockMouseState = true; });
+
+        InstructionPanel.SetActive(false);
+        handIconPickupButton.gameObject.SetActive(false);
+
+    }
 
     private void Update()
     {
@@ -384,6 +386,7 @@ public class PlayerInteractable : MonoBehaviour
     public void StartExperiment()
     {
         InLaserMode = true;
+        boardCanvas.SetActive(false);
         StartCoroutine(StartExperimentCoRoutine());
     }
     IEnumerator  StartExperimentCoRoutine()

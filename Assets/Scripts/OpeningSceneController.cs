@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI.ProceduralImage;
 using UnityEngine.UI;
+using UnityEngine.Rendering;
 
 
 public class OpeningSceneController : MonoBehaviour
@@ -15,14 +16,18 @@ public class OpeningSceneController : MonoBehaviour
 
     [SerializeField] public float subtitleSpeed;
 
-    public float givenTime;
-    public bool fastTime;
+
+
+    [Header("Aninmation Controls")]
+    [SerializeField] GameObject handDragAnim;
+
 
     [Space(10)]
     [Header("UI References")]
     [SerializeField] Toggle crouchToggle;
     [SerializeField] ProceduralImage imageToFadeIn;
     [SerializeField] public GameObject joyStickCanvas;
+    [SerializeField] public GameObject joystick;
     [SerializeField] float fadeDuration = 2f;
     [SerializeField] private GameObject settingsMenu;
 
@@ -48,6 +53,7 @@ public class OpeningSceneController : MonoBehaviour
 
 
     [SerializeField] GameObject bookShelfText;
+    [SerializeField] GameObject offSchoolAudio;
 
     public float minTextVal;
     public float maxTextVal;
@@ -96,17 +102,17 @@ public class OpeningSceneController : MonoBehaviour
 #if  UNITY_WEBGL || UNITY_STANDALONE|| UNITY_EDITOR 
         cameraLook.enabled = true;
         dragLookHandler.enabled = true;
-      
-#elif UNITY_ANDROID 
+
+#elif UNITY_ANDROID
         cameraLook.enabled = false;
         dragLookHandler.enabled = true;
-#endif 
+#endif
 
     }
 
     private void OnEnable()
     {
-    
+
         if (playOpeningScene)
         {
 
@@ -125,58 +131,42 @@ public class OpeningSceneController : MonoBehaviour
         {
             settingsMenu.SetActive(!settingsMenu.activeSelf);
         }
-
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            fastTime = !fastTime;
-            if (fastTime)
-            {
-
-                Time.timeScale = givenTime;
-            }
-            else
-            {
-                Time.timeScale = 1f;
-            }
-        }
-
-
-      
-
     }
-IEnumerator BookShelfLerp()
-{
-        bookShelfText.gameObject.SetActive(true);
-    float t = 0f;
-    bool goingUp = true;
-
-    Vector3 startPos = bookShelfText.transform.localPosition;
-    Vector3 minPos = new Vector3(startPos.x, startPos.y, minTextVal);
-    Vector3 maxPos = new Vector3(startPos.x, startPos.y, maxTextVal);
-
-    while (true) // Infinite loop for continuous ping-pong
+    IEnumerator BookShelfLerp()
     {
-        t = 0f;
 
-        Vector3 from = goingUp ? minPos : maxPos;
-        Vector3 to = goingUp ? maxPos : minPos;
+        float t = 0f;
+        bool goingUp = true;
 
-        while (t < 1f)
+        Vector3 startPos = bookShelfText.transform.localPosition;
+        Vector3 minPos = new Vector3(startPos.x, startPos.y, minTextVal);
+        Vector3 maxPos = new Vector3(startPos.x, startPos.y, maxTextVal);
+
+        while (true) // Infinite loop for continuous ping-pong
         {
-            t += Time.deltaTime * smoothTime;
-            bookShelfText.transform.localPosition = Vector3.Lerp(from, to, t);
-            yield return null;
-        }
+            t = 0f;
 
-        goingUp = !goingUp; // Reverse direction
+            Vector3 from = goingUp ? minPos : maxPos;
+            Vector3 to = goingUp ? maxPos : minPos;
+
+            while (t < 1f)
+            {
+                t += Time.deltaTime * smoothTime;
+                bookShelfText.transform.localPosition = Vector3.Lerp(from, to, t);
+                yield return null;
+            }
+
+            goingUp = !goingUp; // Reverse direction
+        }
     }
-}
 
 
     IEnumerator InitiateOpeningScene()
     {
-        
+        offSchoolAudio.SetActive(true);
+        handDragAnim.SetActive(false);
         imageToFadeIn.color = Color.black;
+        joystick.SetActive(false);
         joyStickCanvas.SetActive(false);
         crouchToggle.isOn = true;
         cameraLook.Sensitivity_X = 0f;
@@ -263,7 +253,7 @@ IEnumerator BookShelfLerp()
     IEnumerator CameraZoomEffect()
     {
         float defaultCameraFOV = 60f;
-        float tempCameraFOV = 20f;
+        float tempCameraFOV = 60f;
 
         Camera cam = Camera.main;
 
@@ -284,7 +274,7 @@ IEnumerator BookShelfLerp()
     IEnumerator CameraZoomEffectReset()
     {
         float defaultCameraFOV = 60f;
-        float tempCameraFOV = 20f;
+        float tempCameraFOV = 60f;
 
         Camera cam = Camera.main;
 
@@ -306,15 +296,16 @@ IEnumerator BookShelfLerp()
         dragLookHandler.sensitivityX = 10f;
         dragLookHandler.sensitivityY = 10f;
         waitDialogues.gameObject.SetActive(false);
-        Invoke(nameof(FindingItemsClip), 2f);
-          StartCoroutine(BookShelfLerp());
+        handDragAnim.SetActive(true);
+       // Invoke(nameof(FindingItemsClip), 2f);
+        StartCoroutine(BookShelfLerp());
 
     }
 
     public void FindingItemsClip()
     {
         //subtitlePanel.SetActive(true);
-         PlayDialogue(DialogueType.FindingItems);
+        PlayDialogue(DialogueType.FindingItems);
     }
 
     public void OpeningSceneFinised()
@@ -325,6 +316,38 @@ IEnumerator BookShelfLerp()
 
     }
 
+
+    public void HandDragAnimScaler()
+    {
+        joystick.SetActive(true);
+        StopAllCoroutines();
+        StartCoroutine(HandDragAnimScale());
+
+    }
+    IEnumerator HandDragAnimScale()
+    {
+        float t = 0f;
+        bookShelfText.gameObject.SetActive(true);
+        while (t < 1)
+        {
+            t += Time.deltaTime * .3f;
+
+            handDragAnim.transform.localScale = Vector3.Lerp(handDragAnim.transform.localScale, Vector3.zero, t);
+            yield return null;
+        }
+
+
+    }
+
+    public void JoystickInfo(GameObject moveArea)
+    {
+        Invoke(nameof(FindingItemsClip), 2f);
+        joystick.transform.GetChild(0).transform.GetChild(1).gameObject.SetActive(false);
+        joystick.GetComponent<Animation>().Stop();
+        moveArea.SetActive(false);
+       
+        
+    }
 
 }
 

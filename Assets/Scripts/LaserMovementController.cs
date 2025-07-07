@@ -4,6 +4,7 @@ using System.Resources;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 using UnityEngine.UI.ProceduralImage;
 
@@ -44,6 +45,10 @@ public class LaserMovementController : MonoBehaviour
     [SerializeField] GameObject incidenceRayText;
     [SerializeField] AudioSource laserSource;
     [SerializeField] AudioClip laserClip;
+    [SerializeField] GameObject laserIntructions;
+   // [SerializeField] private GameObject inGameCanvas;
+
+  
     bool firstTime = false;
 
     Color onColor = Color.green;
@@ -57,10 +62,12 @@ public class LaserMovementController : MonoBehaviour
 
     public void LaserONIndicator()
     {
+      
          StartCoroutine(StartOutline());
     }
     void Start()
     {
+
         incidenceAngleImage.SetActive(isLaserON);
         incidenceRayText.SetActive(isLaserON);
         bottomRightUI.transform.localScale = Vector3.zero;
@@ -132,7 +139,8 @@ public class LaserMovementController : MonoBehaviour
         transform.rotation = Quaternion.Euler(0f, currentAngle, 0f);
     }
 
-    private void OnMouseDown()
+  
+    private void OnMouseUpAsButton()
     {
 
 
@@ -143,13 +151,14 @@ public class LaserMovementController : MonoBehaviour
             laserSource.PlayOneShot(laserClip);
             incidenceAngleImage.SetActive(isLaserON);
             incidenceRayText.SetActive(isLaserON);
-             FindFirstObjectByType<LaserBeamRenderer>().laserLength = 40f;
+            FindFirstObjectByType<LaserBeamRenderer>().laserLength = 40f;
+            laserIntructions.SetActive(!isLaserON);
             outline.enabled = false;
             if (!firstTime)
             {
                 firstTime = true;
                 Invoke(nameof(LeftUI), 1f);
-       
+
 
             }
         }
@@ -158,13 +167,14 @@ public class LaserMovementController : MonoBehaviour
             isLaserON = false;
             incidenceAngleImage.SetActive(isLaserON);
             incidenceRayText.SetActive(isLaserON);
-             FindFirstObjectByType<LaserBeamRenderer>().laserLength = 0f;
+            FindFirstObjectByType<LaserBeamRenderer>().laserLength = 0f;
+            laserIntructions.SetActive(!isLaserON);
         }
         else
         {
             Debug.LogWarning("Something Fishy Going ON");
         }
-        
+
     }
 
     public void LeftUI()
@@ -197,6 +207,7 @@ public class LaserMovementController : MonoBehaviour
     public void ImaginationVoidOpens()
     {
         FindFirstObjectByType<OpeningSceneController>().PlayDialogue(OpeningSceneController.DialogueType.ImaginationBegin);
+        Debug.Log("Panel On");
     }
 
     void TryStartDrag()
@@ -222,7 +233,9 @@ public class LaserMovementController : MonoBehaviour
 
 
     IEnumerator StartOutline()
-    {
+    { 
+        //inGameCanvas.SetActive(false);
+        laserIntructions.SetActive(true);
         float t = 0f;
         while (true) 
         {

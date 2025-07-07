@@ -13,6 +13,11 @@ public class TextWriter : MonoBehaviour
     [SerializeField] private string richTextToWrite;
     [SerializeField] private float typingSpeed = 0.04f;
 
+    [SerializeField] bool snellsLaw;
+    [SerializeField] bool fresnalEffect;
+    [SerializeField] bool whatLearn;
+    [SerializeField] bool keyPoints;
+
 
     public void OnEnable()
     {
@@ -22,7 +27,7 @@ public class TextWriter : MonoBehaviour
 
     IEnumerator TypeRichText(string fullText)
     {
-      objectiveText.gameObject.SetActive(true); 
+        objectiveText.gameObject.SetActive(true);
         objectiveText.text = "";
 
         typingSound.Play();
@@ -51,5 +56,26 @@ public class TextWriter : MonoBehaviour
         }
 
         typingSound.Stop();
+
+        if (snellsLaw)
+        {
+            MainMenu.Instance.boardTextComplete[1] = true;
+        }
+        else if (fresnalEffect)
+        {
+            MainMenu.Instance.boardTextComplete[2] = true;
+        }
+        else if (whatLearn)
+        {
+            MainMenu.Instance.boardTextComplete[3] = true;
+        }
+        else if (keyPoints)
+        {
+            MainMenu.Instance.boardTextComplete[4] = true;
+        }
+        else
+        {
+            Debug.Log("Bool Detection Failed");
+        }
     }
 }

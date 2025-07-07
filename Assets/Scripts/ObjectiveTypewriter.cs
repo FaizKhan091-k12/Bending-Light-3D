@@ -69,7 +69,7 @@ public class ObjectiveTypewriter : MonoBehaviour
         }
         typingSound.Stop();
 
-
+        MainMenu.Instance.boardTextComplete[0] = true;
 
     }
 
