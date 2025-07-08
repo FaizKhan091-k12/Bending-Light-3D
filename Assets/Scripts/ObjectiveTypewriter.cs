@@ -21,6 +21,7 @@ public class ObjectiveTypewriter : MonoBehaviour
     [SerializeField] private AudioSource typingSound;
     [SerializeField] private GameObject objectiveTextGM;
 
+    public Coroutine typeTextrountine;
 
     private void Start()
     {
@@ -31,7 +32,7 @@ public class ObjectiveTypewriter : MonoBehaviour
     {
         if (objectiveText != null)
         {
-            StartCoroutine(TypeText());
+            typeTextrountine = StartCoroutine(TypeText());
         }
     }
 
@@ -48,6 +49,7 @@ public class ObjectiveTypewriter : MonoBehaviour
         }
         typingSound.Stop();
         openingSceneController.OpeningSceneFinised();
+      
     }
 
     public void StartTypingBlackBoard()

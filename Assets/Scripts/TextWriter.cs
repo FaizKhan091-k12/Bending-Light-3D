@@ -72,10 +72,12 @@ public class TextWriter : MonoBehaviour
         else if (keyPoints)
         {
             MainMenu.Instance.boardTextComplete[4] = true;
+            StopAllCoroutines();
         }
         else
         {
             Debug.Log("Bool Detection Failed");
+
         }
     }
 }
