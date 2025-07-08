@@ -53,7 +53,7 @@ public class PlayerInteractable : MonoBehaviour
    [SerializeField] GameObject City;
     [SerializeField] GameObject boardCanvas;
 
-    [SerializeField] GameObject[] turnOffAllTheUnusedAssets;
+
     Interactable currentInteractable;
     float t = 0f;
     bool glassHasPickedUp = false;
@@ -389,18 +389,13 @@ public class PlayerInteractable : MonoBehaviour
         boardCanvas.SetActive(false);
         StartCoroutine(StartExperimentCoRoutine());
 
-        Invoke(nameof(UnUsedAssets), 5f);
+    
 
 
     }
 
-    public void UnUsedAssets()
-    {
-          for (int i = 0; i < turnOffAllTheUnusedAssets.Length; i++)
-        {
-            turnOffAllTheUnusedAssets[i].SetActive(false);
-        }
-    }
+
+
     IEnumerator  StartExperimentCoRoutine()
     {
         imageToFadeIn.gameObject.SetActive(true);

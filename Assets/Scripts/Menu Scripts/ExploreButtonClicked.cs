@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class ExploreButtonClicked : MonoBehaviour
@@ -18,6 +19,9 @@ public class ExploreButtonClicked : MonoBehaviour
 
     public void ExploreOFF()
     {
-          exploreBtn.gameObject.SetActive(false);
+        
+        exploreBtn.gameObject.SetActive(false);
     }
+
+
 }
