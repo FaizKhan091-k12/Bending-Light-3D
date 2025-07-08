@@ -66,6 +66,7 @@ public class LaserBeamRenderer : MonoBehaviour
     private Color beamColor;
     public bool didRefract = false;
     public bool didReflect = false;
+    
 
     private readonly Dictionary<string, (float ior380, float ior700)> materialIORs = new()
     {

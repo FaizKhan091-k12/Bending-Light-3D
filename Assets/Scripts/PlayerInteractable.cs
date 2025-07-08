@@ -53,7 +53,7 @@ public class PlayerInteractable : MonoBehaviour
    [SerializeField] GameObject City;
     [SerializeField] GameObject boardCanvas;
 
-
+    [SerializeField] GameObject[] turnOffAllTheUnusedAssets;
     Interactable currentInteractable;
     float t = 0f;
     bool glassHasPickedUp = false;
@@ -389,13 +389,33 @@ public class PlayerInteractable : MonoBehaviour
         boardCanvas.SetActive(false);
         StartCoroutine(StartExperimentCoRoutine());
 
-    
+        Invoke(nameof(UnUsedAssets), 5f);
 
 
     }
 
+    public void UnUsedAssets()
+{
+    StartCoroutine(DestroyAssetsGradually());
+}
 
+IEnumerator DestroyAssetsGradually()
+{
+    int chunkSize = 3; // How many objects to disable/destroy per frame
+    float delayBetweenChunks = 0.02f; // ~20ms between chunks
 
+    for (int i = 0; i < turnOffAllTheUnusedAssets.Length; i++)
+    {
+        turnOffAllTheUnusedAssets[i].SetActive(false); // Disable first
+
+        // Optionally: delay actual destruction a bit after disabling
+        Destroy(turnOffAllTheUnusedAssets[i].gameObject, 2f);
+
+        // Chunk: Every N objects, yield to next frame
+        if ((i + 1) % chunkSize == 0)
+            yield return new WaitForSeconds(delayBetweenChunks);
+    }
+}
     IEnumerator  StartExperimentCoRoutine()
     {
         imageToFadeIn.gameObject.SetActive(true);

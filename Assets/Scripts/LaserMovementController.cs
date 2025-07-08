@@ -35,7 +35,9 @@ public class LaserMovementController : MonoBehaviour
     [SerializeField] private GameObject normals;
     [SerializeField] private GameObject[] angles;
 
-    [Header("UI References")] [SerializeField]
+    [Header("UI References")]
+    [SerializeField] Vector3 UIScale;
+    [SerializeField]
     private GameObject topLeftUI;
     [SerializeField] private GameObject topRightUI;
     [SerializeField] private GameObject bottomLeftUI;
@@ -43,6 +45,9 @@ public class LaserMovementController : MonoBehaviour
 
     [SerializeField] GameObject incidenceAngleImage;
     [SerializeField] GameObject incidenceRayText;
+
+    [SerializeField] GameObject refrectedAngleImage;
+    [SerializeField] GameObject refractedRayText;
     [SerializeField] AudioSource laserSource;
     [SerializeField] AudioClip laserClip;
     [SerializeField] GameObject laserIntructions;
@@ -70,6 +75,8 @@ public class LaserMovementController : MonoBehaviour
 
         incidenceAngleImage.SetActive(isLaserON);
         incidenceRayText.SetActive(isLaserON);
+        refractedRayText.SetActive(isLaserON);
+        refrectedAngleImage.SetActive(isLaserON);
         bottomRightUI.transform.localScale = Vector3.zero;
         topLeftUI.transform.localScale = Vector3.zero;
         topRightUI.transform.localScale = Vector3.zero;
@@ -143,6 +150,7 @@ public class LaserMovementController : MonoBehaviour
     private void OnMouseUpAsButton()
     {
 
+        if (isLaserON) return;
 
         //  GetComponent<BoxCollider>().enabled = false;
         if (!isLaserON)
@@ -151,6 +159,8 @@ public class LaserMovementController : MonoBehaviour
             laserSource.PlayOneShot(laserClip);
             incidenceAngleImage.SetActive(isLaserON);
             incidenceRayText.SetActive(isLaserON);
+            refractedRayText.SetActive(isLaserON);
+        refrectedAngleImage.SetActive(isLaserON);
             FindFirstObjectByType<LaserBeamRenderer>().laserLength = 40f;
             laserIntructions.SetActive(!isLaserON);
             outline.enabled = false;
@@ -167,6 +177,8 @@ public class LaserMovementController : MonoBehaviour
             isLaserON = false;
             incidenceAngleImage.SetActive(isLaserON);
             incidenceRayText.SetActive(isLaserON);
+            refractedRayText.SetActive(isLaserON);
+        refrectedAngleImage.SetActive(isLaserON);
             FindFirstObjectByType<LaserBeamRenderer>().laserLength = 0f;
             laserIntructions.SetActive(!isLaserON);
         }
@@ -180,27 +192,27 @@ public class LaserMovementController : MonoBehaviour
     public void LeftUI()
     {
         topLeftUI.transform.localScale = Vector3.zero;
-        topLeftUI.transform.DOScale(Vector3.one, .25f).SetEase(Ease.OutBack);
+        topLeftUI.transform.DOScale(UIScale, .25f).SetEase(Ease.OutBack);
         Invoke(nameof(RightUI),.1f);
     }
 
     public void RightUI()
     {
         topRightUI.transform.localScale = Vector3.zero;
-        topRightUI.transform.DOScale(Vector3.one, .25f).SetEase(Ease.OutBack);
+        topRightUI.transform.DOScale(UIScale, .25f).SetEase(Ease.OutBack);
         Invoke(nameof(BottomLeftUI), .1f);
     }
 
     public void BottomLeftUI()
     {
         bottomLeftUI.transform.localScale = Vector3.zero;
-        bottomLeftUI.transform.DOScale(Vector3.one, .25f).SetEase(Ease.OutBack);
+        bottomLeftUI.transform.DOScale(UIScale, .25f).SetEase(Ease.OutBack);
         Invoke(nameof(BottomRightUI), .1f);
     }
     public void BottomRightUI()
     {
         bottomRightUI.transform.localScale = Vector3.zero;
-        bottomRightUI.transform.DOScale(Vector3.one, .25f).SetEase(Ease.OutBack);
+        bottomRightUI.transform.DOScale(UIScale, .25f).SetEase(Ease.OutBack);
         Invoke(nameof(ImaginationVoidOpens), .5f);
     }
 
@@ -236,6 +248,7 @@ public class LaserMovementController : MonoBehaviour
     { 
         //inGameCanvas.SetActive(false);
         laserIntructions.SetActive(true);
+        GetComponent<BoxCollider>().enabled = true;
         float t = 0f;
         while (true) 
         {
