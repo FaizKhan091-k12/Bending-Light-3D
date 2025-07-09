@@ -7,6 +7,8 @@ using UnityEngine.UI.ProceduralImage;
 
 public class PlayerInteractable : MonoBehaviour
 {
+
+    public static PlayerInteractable Instance;
     [Header("Debug Options")] [SerializeField]
     private bool lockMouseState;
 
@@ -28,7 +30,7 @@ public class PlayerInteractable : MonoBehaviour
     [SerializeField] Transform laserDropLocation;
 
     [Header("Item Setting")]
-    [SerializeField] bool itemInHand = false;
+    [SerializeField] public bool itemInHand = false;
     [SerializeField] Transform player;
     [SerializeField] Transform experimentTable;
     [SerializeField] float itemDropDistance;
@@ -61,8 +63,15 @@ public class PlayerInteractable : MonoBehaviour
     public bool startExperimentKeyIndicator = false;
     public Button backButton;
     public bool InLaserMode;
-    
-   private void Start()
+
+
+
+    void Awake()
+    {
+        Instance = this;
+    }
+
+    private void Start()
     {
         backButton.onClick.AddListener(delegate { lockMouseState = true; });
 
@@ -78,7 +87,8 @@ public class PlayerInteractable : MonoBehaviour
         {
             if (!itemInHand && !bothObjectiveCompleted)
             {
-                RayCastItems();
+                // RayCastItems();
+                CheckNearbyInteractables();
             }
             else
             {
@@ -187,50 +197,97 @@ public class PlayerInteractable : MonoBehaviour
        }
    }
 
-    private void RayCastItems()
+    public bool IsItemNearby(Transform itemTransform)
     {
-        Ray ray = cam.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
-
-        RaycastHit hitInfo;
-
-       
-        Debug.DrawRay(ray.origin, ray.direction * rayMaxDistance, Color.red);
-
-        if (Physics.Raycast(ray, out hitInfo, rayMaxDistance))
-        {
-           
-            Interactable interactable = hitInfo.collider.GetComponent<Interactable>();
-            
-            if (interactable != null)
-            {
-                handIconPickupButton.gameObject.SetActive(true);
-                currentInteractable = interactable;
-                     instructionText.text = "Press E or tap on hand icon to pick the item";
-                 Interact(interactable);
-                 if (!itemInHand)
-                 {
-                   //  InstructionPanel.SetActive(true);
-                 }
-                
-                
-
-            }
-            else
-            {
-                
-                //handIconPickupButton.gameObject.SetActive(false);  
-              //  InstructionPanel.SetActive(false);
-               // Debug.Log("First");
-            }
-        }
-        else
-        {
-            handIconPickupButton.gameObject.SetActive(false);
-       //    InstructionPanel.SetActive(false);
-          //  Debug.Log("Second");
-        }
-
+        float distance = Vector3.Distance(player.position, itemTransform.position);
+        return distance < itemDropDistance;
     }
+
+    public void OnItemClicked(Interactable interactable)
+    {
+        currentInteractable = interactable;
+        Interact(interactable);  // Calls ObjectPickAndDrop
+        Debug.Log( "Pickup");
+    }
+
+    void CheckNearbyInteractables()
+   {
+    Interactable[] allInteractables = FindObjectsOfType<Interactable>();
+    currentInteractable = null;
+
+    foreach (var interactable in allInteractables)
+    {
+        float dist = Vector3.Distance(player.position, interactable.transform.position);
+
+
+            if (interactable.isPickeUP == false)
+            {
+                if (dist < itemDropDistance)
+                {
+
+                    currentInteractable = interactable;
+                    handIconPickupButton.gameObject.SetActive(true);
+                    instructionText.text = "Tap the object to pick it up";
+                    break;  // Pick the first nearby
+                }
+            }
+            
+
+         
+    }
+
+    if (currentInteractable == null)
+    {
+        handIconPickupButton.gameObject.SetActive(false);
+    }
+}
+
+
+
+    // private void RayCastItems()
+    // {
+    //     Ray ray = cam.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+
+    //     RaycastHit hitInfo;
+
+
+    //     Debug.DrawRay(ray.origin, ray.direction * rayMaxDistance, Color.red);
+
+    //     if (Physics.Raycast(ray, out hitInfo, rayMaxDistance))
+    //     {
+
+    //         Interactable interactable = hitInfo.collider.GetComponent<Interactable>();
+
+    //         if (interactable != null)
+    //         {
+    //             handIconPickupButton.gameObject.SetActive(true);
+    //             currentInteractable = interactable;
+    //                  instructionText.text = "Press E or tap on hand icon to pick the item";
+    //              Interact(interactable);
+    //              if (!itemInHand)
+    //              {
+    //                //  InstructionPanel.SetActive(true);
+    //              }
+
+
+
+    //         }
+    //         else
+    //         {
+
+    //             //handIconPickupButton.gameObject.SetActive(false);  
+    //           //  InstructionPanel.SetActive(false);
+    //            // Debug.Log("First");
+    //         }
+    //     }
+    //     else
+    //     {
+    //         handIconPickupButton.gameObject.SetActive(false);
+    //    //    InstructionPanel.SetActive(false);
+    //       //  Debug.Log("Second");
+    //     }
+
+    // }
 
     public void Interact(Interactable interactable)
     {
@@ -251,7 +308,7 @@ public class PlayerInteractable : MonoBehaviour
                 StartExperiment();
                 Debug.Log("Second");
             }
-           
+
         });
 
         if (Input.GetKeyDown(pickupKey))
@@ -263,7 +320,16 @@ public class PlayerInteractable : MonoBehaviour
                     ObjectPickAndDrop(interactable);
                 }
             }
-         }
+        }
+
+
+        if (!startExperimentKeyIndicator)
+        {
+            if (interactable != null)
+            {
+                ObjectPickAndDrop(interactable);
+            }
+        }
 
     }
 
@@ -320,20 +386,23 @@ public class PlayerInteractable : MonoBehaviour
 
             if (interactable.isGlass)
             {
+  
                 if (objectiveComplete1.activeInHierarchy && objectiveComplete2.activeInHierarchy)
-                {
+                {              
+                                  Debug.Log("SCe");
                     objectiveComplete3.SetActive(true);
                     bothObjectiveCompleted = true;
                     FindFirstObjectByType<OpeningSceneController>()
                         .PlayDialogue(OpeningSceneController.DialogueType.StartExperiment);
                     Invoke(nameof(StartExperimentInstruction), 3f);
+
                 }
                 interactable.gameObject.transform.SetParent(GlassDropLocation);
                 // interactable.gameObject.transform.localPosition = Vector3.zero;
                 // interactable.gameObject.transform.localRotation = Quaternion.identity;
-                StartCoroutine(GlassPickUpDropDuration(interactable,Quaternion.identity));
+                StartCoroutine(GlassPickUpDropDuration(interactable, Quaternion.identity));
                 interactable.GetComponent<BoxCollider>().enabled = false;
-
+                Debug.Log("DropGlass");
             }
             else if (interactable.isLaser)
             {
@@ -343,14 +412,15 @@ public class PlayerInteractable : MonoBehaviour
                     bothObjectiveCompleted = true;
                     FindFirstObjectByType<OpeningSceneController>()
                         .PlayDialogue(OpeningSceneController.DialogueType.StartExperiment);
-                 Invoke(nameof(StartExperimentInstruction), 3f);
-                 
+                    Invoke(nameof(StartExperimentInstruction), 3f);
+
                 }
                 interactable.gameObject.transform.SetParent(laserDropLocation);
                 // interactable.gameObject.transform.localPosition = Vector3.zero;
                 // interactable.gameObject.transform.localRotation = Quaternion.identity;
-                StartCoroutine(GlassPickUpDropDuration(interactable,Quaternion.identity));
+                StartCoroutine(GlassPickUpDropDuration(interactable, Quaternion.identity));
                 interactable.GetComponent<BoxCollider>().enabled = false;
+                Debug.Log("DropLaser");
             }
         }
      

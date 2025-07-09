@@ -3,6 +3,7 @@ using System.Collections;
 using System.Resources;
 using DG.Tweening;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
@@ -51,7 +52,8 @@ public class LaserMovementController : MonoBehaviour
     [SerializeField] AudioSource laserSource;
     [SerializeField] AudioClip laserClip;
     [SerializeField] GameObject laserIntructions;
-   // [SerializeField] private GameObject inGameCanvas;
+    // [SerializeField] private GameObject inGameCanvas;
+    [SerializeField] GameObject walkThroughImage;
 
   
     bool firstTime = false;
@@ -214,12 +216,19 @@ public class LaserMovementController : MonoBehaviour
         bottomRightUI.transform.localScale = Vector3.zero;
         bottomRightUI.transform.DOScale(UIScale, .25f).SetEase(Ease.OutBack);
         Invoke(nameof(ImaginationVoidOpens), .5f);
+
+        Invoke(nameof(StartWalkThrough), 10f);
     }
 
     public void ImaginationVoidOpens()
     {
         FindFirstObjectByType<OpeningSceneController>().PlayDialogue(OpeningSceneController.DialogueType.ImaginationBegin);
-        Debug.Log("Panel On");
+
+    }
+
+    public void StartWalkThrough()
+    {
+        walkThroughImage.SetActive(true);
     }
 
     void TryStartDrag()

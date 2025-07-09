@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI.ProceduralImage;
 using UnityEngine.UI;
 using UnityEngine.Rendering;
+using UnityEngine.Events;
 
 
 public class OpeningSceneController : MonoBehaviour
@@ -16,6 +17,7 @@ public class OpeningSceneController : MonoBehaviour
 
     [SerializeField] public float subtitleSpeed;
 
+   
 
 
     [Header("Aninmation Controls")]
@@ -163,6 +165,7 @@ public class OpeningSceneController : MonoBehaviour
 
     IEnumerator InitiateOpeningScene()
     {
+        waitDialogues.gameObject.SetActive(true);
         offSchoolAudio.SetActive(true);
         handDragAnim.SetActive(false);
         imageToFadeIn.color = Color.black;
@@ -221,6 +224,9 @@ public class OpeningSceneController : MonoBehaviour
 
         if (zoomAfter)
             StartCoroutine(CameraZoomEffect());
+
+     
+        
     }
 
     public void PlayDialogue(DialogueType type)
