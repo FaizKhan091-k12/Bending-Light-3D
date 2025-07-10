@@ -54,7 +54,7 @@ public class LaserMovementController : MonoBehaviour
     [SerializeField] GameObject laserIntructions;
     // [SerializeField] private GameObject inGameCanvas;
     [SerializeField] GameObject walkThroughImage;
-
+    [SerializeField] GameObject blockClickedImage;
   
     bool firstTime = false;
 
@@ -229,6 +229,7 @@ public class LaserMovementController : MonoBehaviour
     public void StartWalkThrough()
     {
         walkThroughImage.SetActive(true);
+        blockClickedImage.SetActive(false);
     }
 
     void TryStartDrag()

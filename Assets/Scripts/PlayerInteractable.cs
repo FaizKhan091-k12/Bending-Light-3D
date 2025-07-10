@@ -9,19 +9,19 @@ public class PlayerInteractable : MonoBehaviour
 {
 
     public static PlayerInteractable Instance;
-    [Header("Debug Options")] [SerializeField]
+    [Header("Debug Options")][SerializeField]
     private bool lockMouseState;
 
-    public  bool bothObjectiveCompleted = false;
-    
+    public bool bothObjectiveCompleted = false;
+
     [Space(10)]
     public OpeningSceneController openingSceneController;
     public InitiateExperiment initiateExperiment;
 
-    [Header("RayCast Refrences")] 
+    [Header("RayCast Refrences")]
     [SerializeField] Camera cam;
     [SerializeField] float rayMaxDistance;
-    
+
     [Header("Pickup Refrences")]
     [SerializeField] Button handIconPickupButton;
     [SerializeField] Button startExpButton;
@@ -37,7 +37,7 @@ public class PlayerInteractable : MonoBehaviour
     [SerializeField] float pickAndDropSpeed;
     [SerializeField] KeyCode pickupKey = KeyCode.E;
 
-    [Header("Objective Complete")] 
+    [Header("Objective Complete")]
     [SerializeField] GameObject objectiveComplete1;
     [SerializeField] GameObject objectiveComplete2;
     [SerializeField] GameObject objectiveComplete3;
@@ -45,14 +45,14 @@ public class PlayerInteractable : MonoBehaviour
     [SerializeField] private GameObject InstructionPanel;
     [SerializeField] TextMeshProUGUI instructionText;
 
-    [Header("Start Experiment Refrences")] 
+    [Header("Start Experiment Refrences")]
     [SerializeField] ProceduralImage imageToFadeIn;
     [SerializeField] float fadeDuration;
     [SerializeField] GameObject experimentCam;
     [SerializeField] GameObject playerCam;
     [SerializeField] AudioSource[] startingAudioSources;
     [SerializeField] AudioSource experimentAudioSources;
-   [SerializeField] GameObject City;
+    [SerializeField] GameObject City;
     [SerializeField] GameObject boardCanvas;
 
     [SerializeField] GameObject[] turnOffAllTheUnusedAssets;
@@ -134,6 +134,7 @@ public class PlayerInteractable : MonoBehaviour
         {
 
             InstructionPanel.SetActive(true);
+
         }
         else
         {
@@ -161,17 +162,17 @@ public class PlayerInteractable : MonoBehaviour
 
     public void StartIndicatorFalse()
     {
-     startExperimentKeyIndicator = false;
-   }
+        startExperimentKeyIndicator = false;
+    }
 
-   private void CalculateDistancebtwTableNPlayer()
+    private void CalculateDistancebtwTableNPlayer()
     {
         float distance = Vector3.Distance(player.position, experimentTable.position);
         if (distance < itemDropDistance)
         {
             handIconPickupButton.gameObject.SetActive(true);
             instructionText.text = "Press E or tap on hand icon to drop item";
-          //  InstructionPanel.SetActive(true);
+            //  InstructionPanel.SetActive(true);
             Interact(currentInteractable);
         }
         else
@@ -181,21 +182,21 @@ public class PlayerInteractable : MonoBehaviour
         }
     }
 
-   private void MouseStateController()
-   {
-       if(!lockMouseState) return;
-       if (Input.GetKeyDown(KeyCode.Escape))
-       {
-           Cursor.lockState = CursorLockMode.None;
-           Cursor.visible = true;
-       }
+    private void MouseStateController()
+    {
+        if (!lockMouseState) return;
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
 
-       if (Input.GetMouseButtonDown(0))
-       {
-           Cursor.lockState = CursorLockMode.Locked;
-           Cursor.visible = false;
-       }
-   }
+        if (Input.GetMouseButtonDown(0))
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+    }
 
     public bool IsItemNearby(Transform itemTransform)
     {
@@ -207,17 +208,17 @@ public class PlayerInteractable : MonoBehaviour
     {
         currentInteractable = interactable;
         Interact(interactable);  // Calls ObjectPickAndDrop
-        Debug.Log( "Pickup");
+        Debug.Log("Pickup");
     }
 
     void CheckNearbyInteractables()
-   {
-    Interactable[] allInteractables = FindObjectsOfType<Interactable>();
-    currentInteractable = null;
-
-    foreach (var interactable in allInteractables)
     {
-        float dist = Vector3.Distance(player.position, interactable.transform.position);
+        Interactable[] allInteractables = FindObjectsOfType<Interactable>();
+        currentInteractable = null;
+
+        foreach (var interactable in allInteractables)
+        {
+            float dist = Vector3.Distance(player.position, interactable.transform.position);
 
 
             if (interactable.isPickeUP == false)
@@ -228,19 +229,37 @@ public class PlayerInteractable : MonoBehaviour
                     currentInteractable = interactable;
                     handIconPickupButton.gameObject.SetActive(true);
                     instructionText.text = "Tap the object to pick it up";
+                    AutoOutline autoOutline = currentInteractable.transform.GetChild(0).GetComponent<AutoOutline>();
+                    if (autoOutline != null)
+                    {
+                        autoOutline.gameObject.SetActive(false);
+                    }
+
+
                     break;  // Pick the first nearby
                 }
+                else
+                {
+                    currentInteractable = interactable;
+                    AutoOutline autoOutline = currentInteractable.transform.GetChild(0).GetComponent<AutoOutline>();
+                    if (autoOutline != null && currentInteractable == null)
+                    {
+                        autoOutline.gameObject.SetActive(true);
+                    }
+                }
             }
-            
 
-         
-    }
 
-    if (currentInteractable == null)
-    {
-        handIconPickupButton.gameObject.SetActive(false);
+
+        }
+
+        if (currentInteractable == null)
+        {
+            handIconPickupButton.gameObject.SetActive(false);
+
+        }
+
     }
-}
 
 
 
@@ -291,6 +310,7 @@ public class PlayerInteractable : MonoBehaviour
 
     public void Interact(Interactable interactable)
     {
+       
         handIconPickupButton.onClick.RemoveAllListeners();
         handIconPickupButton.onClick.AddListener(delegate
         {

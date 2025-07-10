@@ -7,6 +7,7 @@ using UnityEngine.UI.ProceduralImage;
 using UnityEngine.UI;
 using UnityEngine.Rendering;
 using UnityEngine.Events;
+using Unity.Mathematics;
 
 
 public class OpeningSceneController : MonoBehaviour
@@ -20,7 +21,7 @@ public class OpeningSceneController : MonoBehaviour
    
 
 
-    [Header("Aninmation Controls")]
+    [Header("Animation Controls")]
     [SerializeField] GameObject handDragAnim;
 
 
@@ -56,6 +57,7 @@ public class OpeningSceneController : MonoBehaviour
 
     [SerializeField] GameObject bookShelfText;
     [SerializeField] GameObject offSchoolAudio;
+    [SerializeField] GameObject outline1, outline2;
 
     public float minTextVal;
     public float maxTextVal;
@@ -101,7 +103,10 @@ public class OpeningSceneController : MonoBehaviour
     private void Awake()
     {
 
-#if  UNITY_WEBGL || UNITY_STANDALONE|| UNITY_EDITOR 
+        outline1.SetActive(false);
+         outline2.SetActive(false);
+         
+#if UNITY_WEBGL || UNITY_STANDALONE || UNITY_EDITOR
         cameraLook.enabled = true;
         dragLookHandler.enabled = true;
 
@@ -119,7 +124,7 @@ public class OpeningSceneController : MonoBehaviour
         {
 
             StartCoroutine(InitiateOpeningScene());
-
+            StartCoroutine(DialoguesText());
         }
         else
         {
@@ -132,6 +137,26 @@ public class OpeningSceneController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             settingsMenu.SetActive(!settingsMenu.activeSelf);
+        }
+    }
+
+    IEnumerator DialoguesText()
+    {
+        float t = 0f;
+
+        while (true)
+        {
+            t += Time.deltaTime * 2f;
+
+            float sinTime = (Mathf.Sin(t) + 1) / 2f;
+
+            Color tempColor = waitDialogues.color;
+
+            tempColor.a = math.lerp(0.5f, 1, sinTime);
+
+            waitDialogues.color = tempColor;
+            yield return null;
+
         }
     }
     IEnumerator BookShelfLerp()
@@ -165,7 +190,7 @@ public class OpeningSceneController : MonoBehaviour
 
     IEnumerator InitiateOpeningScene()
     {
-        waitDialogues.gameObject.SetActive(true);
+      
         offSchoolAudio.SetActive(true);
         handDragAnim.SetActive(false);
         imageToFadeIn.color = Color.black;
@@ -190,7 +215,7 @@ public class OpeningSceneController : MonoBehaviour
         // yield return new WaitForSeconds(0.2f);
         while (t < fadeDuration)
         {
-            t += Time.deltaTime;
+            t += Time.deltaTime * 2f;
             float alpha = Mathf.Lerp(1f, 0f, t / fadeDuration);
             imageToFadeIn.color = new Color(color.r, color.g, color.b, alpha);
             yield return null;
@@ -303,6 +328,8 @@ public class OpeningSceneController : MonoBehaviour
         dragLookHandler.sensitivityY = 10f;
         waitDialogues.gameObject.SetActive(false);
         handDragAnim.SetActive(true);
+                outline1.SetActive(true);
+         outline2.SetActive(true);
        // Invoke(nameof(FindingItemsClip), 2f);
         StartCoroutine(BookShelfLerp());
 

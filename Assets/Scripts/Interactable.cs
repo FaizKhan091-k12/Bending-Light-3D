@@ -21,8 +21,9 @@ public class Interactable : MonoBehaviour
                 this.isPickeUP = true;
                 player.OnItemClicked(this);
                 GetComponent<BoxCollider>().enabled = false;
+                
             }
-            
+          
         }
     }
 }
